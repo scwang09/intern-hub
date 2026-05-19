@@ -96,13 +96,17 @@ Please review this deliverable and return your JSON assessment.`,
     });
 
     const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash",
       systemInstruction: SYSTEM_PROMPT,
     });
 
     const result = await model.generateContent({
       contents: [{ role: "user", parts }],
-      generationConfig: { maxOutputTokens: 2000, temperature: 0.1 },
+      generationConfig: {
+        maxOutputTokens: 2000,
+        temperature: 0.1,
+        responseMimeType: "application/json",
+      },
     });
 
     const raw = result.response.text();
@@ -110,7 +114,7 @@ Please review this deliverable and return your JSON assessment.`,
 
     if (!parsed) {
       return NextResponse.json(
-        { error: "Failed to parse review response", raw },
+        { error: "Failed to parse review response", raw: raw.slice(0, 500) },
         { status: 500 }
       );
     }
