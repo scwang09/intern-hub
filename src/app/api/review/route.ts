@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { put } from "@vercel/blob";
 import { saveSubmission } from "@/lib/db";
 import { notifyManagerNewSubmission } from "@/lib/notify";
 import type { Submission, ReviewResult } from "@/lib/types";
@@ -29,36 +28,49 @@ JSON shape:
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
-    const file = formData.get("file") as File | null;
+
+    // File is now uploaded directly to Blob from the browser —
+    // we receive the URL + metadata rather than raw bytes.
+    const fileUrl = formData.get("fileUrl") as string;
+    const fileName = formData.get("fileName") as string;
     const intern = formData.get("intern") as string;
     const internEmail = formData.get("internEmail") as string;
     const task = formData.get("task") as string;
     const notes = formData.get("notes") as string;
 
-    if (!file) return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-    if (!internEmail) return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    if (!fileUrl || !fileName) {
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    }
+    if (!internEmail) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
 
-    const bytes = await file.arrayBuffer();
-    const buffer = Buffer.from(bytes);
-    const mimeType = file.type || guessMime(file.name);
+    // Fetch the file from Blob storage for Gemini processing
+    const upstream = await fetch(fileUrl);
+    const buffer = Buffer.from(await upstream.arrayBuffer());
+    const mimeType = guessMime(fileName);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const parts: any[] = [];
 
     if (mimeType === "application/pdf") {
-      parts.push({ inlineData: { mimeType: "application/pdf", data: buffer.toString("base64") } });
-    } else if (isExcel(mimeType, file.name)) {
-      parts.push({ text: `Excel file contents (${file.name}):\n\n${await parseExcel(buffer)}` });
-    } else if (isWord(mimeType, file.name)) {
-      parts.push({ text: `Word document contents (${file.name}):\n\n${await parseWord(buffer)}` });
-    } else if (mimeType.startsWith("text/") || file.name.endsWith(".csv")) {
-      parts.push({ text: `File contents (${file.name}):\n\n${buffer.toString("utf-8")}` });
+      parts.push({
+        inlineData: { mimeType: "application/pdf", data: buffer.toString("base64") },
+      });
+    } else if (isExcel(mimeType, fileName)) {
+      parts.push({ text: `Excel file contents (${fileName}):\n\n${await parseExcel(buffer)}` });
+    } else if (isWord(mimeType, fileName)) {
+      parts.push({ text: `Word document contents (${fileName}):\n\n${await parseWord(buffer)}` });
+    } else if (mimeType.startsWith("text/") || fileName.endsWith(".csv")) {
+      parts.push({ text: `File contents (${fileName}):\n\n${buffer.toString("utf-8")}` });
     } else {
-      parts.push({ text: `File: "${file.name}" (${mimeType}, ${(buffer.length / 1024).toFixed(1)} KB). Direct parsing unavailable — review based on context.` });
+      parts.push({
+        text: `File: "${fileName}" (${mimeType}, ${(buffer.length / 1024).toFixed(1)} KB). Direct parsing unavailable — review based on context.`,
+      });
     }
 
     parts.push({
-      text: `Intern: ${intern}\nTask: ${task}\nFile: ${file.name}\n${notes ? `Manager notes: ${notes}` : ""}\n\nPlease review this deliverable and return your JSON assessment.`,
+      text: `Intern: ${intern}\nTask: ${task}\nFile: ${fileName}\n${notes ? `Manager notes: ${notes}` : ""}\n\nPlease review this deliverable and return your JSON assessment.`,
     });
 
     const model = genAI.getGenerativeModel({
@@ -82,24 +94,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to parse AI review response" }, { status: 500 });
     }
 
-    // Upload file to Blob storage for manager to view
-    let fileUrl: string | undefined;
-    try {
-      const blob = await put(`submissions/${Date.now()}-${file.name}`, file, {
-        access: "public",
-      });
-      fileUrl = blob.url;
-    } catch (_) {
-      // Non-fatal — submission still works without file preview
-    }
-
     const submission: Submission = {
       id: crypto.randomUUID(),
       intern,
       internEmail,
       task,
-      fileName: file.name,
-      fileUrl,
+      fileName,
+      fileUrl, // already in Blob — reuse the URL
       review,
       status: "pending",
       managerNotes: "",
