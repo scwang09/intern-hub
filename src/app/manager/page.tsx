@@ -8,7 +8,20 @@ const VERDICTS = ["Approve", "Approve with minor fixes", "Needs revision", "Reje
 const GRADES = ["A", "B+", "B", "C+", "C", "D"];
 const SEVERITIES = ["high", "medium", "low"];
 
-const isPdf = (fileName: string) => fileName.toLowerCase().endsWith(".pdf");
+const isPdf = (name: string) => name.toLowerCase().endsWith(".pdf");
+
+const isOffice = (name: string) => {
+  const n = name.toLowerCase();
+  return n.endsWith(".xlsx") || n.endsWith(".xls") ||
+    n.endsWith(".docx") || n.endsWith(".doc");
+};
+
+function getViewerUrl(fileName: string, fileUrl: string): string | null {
+  if (isPdf(fileName)) return fileUrl;
+  if (isOffice(fileName))
+    return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
+  return null;
+}
 
 export default function ManagerPage() {
   const [password, setPassword] = useState("");
@@ -234,29 +247,41 @@ export default function ManagerPage() {
             {/* File viewer panel */}
             <div className={styles.filePanel}>
               <p className={styles.filePanelLabel}>
-                {selected.fileName}
+                <span className={styles.filePanelName}>{selected.fileName}</span>
                 {selected.fileUrl && (
-                  <a href={selected.fileUrl} target="_blank" rel="noopener noreferrer" className={styles.downloadLink}>
-                    ↗ Open
+                  <a
+                    href={`/api/submissions/${selected.id}/file`}
+                    download={selected.fileName}
+                    className={styles.downloadLink}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      fetch(`/api/submissions/${selected.id}/file`, {
+                        headers: { "x-manager-password": savedPwd },
+                      })
+                        .then((r) => r.blob())
+                        .then((blob) => {
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = selected.fileName;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        });
+                    }}
+                  >
+                    ↓ Download
                   </a>
                 )}
               </p>
-              {selected.fileUrl && isPdf(selected.fileName) ? (
+              {selected.fileUrl && getViewerUrl(selected.fileName, selected.fileUrl) ? (
                 <iframe
-                  src={selected.fileUrl}
+                  src={getViewerUrl(selected.fileName, selected.fileUrl)!}
                   className={styles.pdfFrame}
                   title="Submitted file"
                 />
-              ) : selected.fileUrl ? (
-                <div className={styles.noPreview}>
-                  <p>Preview not available for this file type.</p>
-                  <a href={selected.fileUrl} target="_blank" rel="noopener noreferrer" className={styles.downloadBtn}>
-                    Download {selected.fileName}
-                  </a>
-                </div>
               ) : (
                 <div className={styles.noPreview}>
-                  <p>File not available for preview.</p>
+                  <p>{selected.fileUrl ? "Preview not available for this file type." : "File not available for preview."}</p>
                 </div>
               )}
             </div>
