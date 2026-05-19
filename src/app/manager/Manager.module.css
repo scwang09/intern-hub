@@ -1,0 +1,425 @@
+/* ── Auth gate ───────────────────────────────────────────────────────────── */
+.authWrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #0a0a0a;
+}
+
+.authCard {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 12px;
+  padding: 40px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+}
+
+.authTitle {
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: #f0f0f0;
+  margin: 0 0 4px;
+}
+
+.authSub {
+  font-size: 0.8rem;
+  color: #555;
+  margin: 0 0 28px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.authForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.authInput {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #2a2a2a;
+  background: #0a0a0a;
+  color: #f0f0f0;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.authInput:focus {
+  border-color: #444;
+}
+
+.authBtn {
+  padding: 10px;
+  border-radius: 8px;
+  border: none;
+  background: #0070f3;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.authBtn:hover {
+  background: #0060d0;
+}
+
+.authError {
+  color: #e05252;
+  font-size: 0.85rem;
+  margin: 12px 0 0;
+}
+
+/* ── Shell ───────────────────────────────────────────────────────────────── */
+.shell {
+  min-height: 100vh;
+  background: #0a0a0a;
+  display: flex;
+  flex-direction: column;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 28px;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #f0f0f0;
+  margin: 0;
+}
+
+.sub {
+  font-size: 0.75rem;
+  color: #555;
+  margin: 2px 0 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.refreshBtn {
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: 1px solid #2a2a2a;
+  background: transparent;
+  color: #888;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.refreshBtn:hover {
+  border-color: #444;
+  color: #ccc;
+}
+
+/* ── Layout ──────────────────────────────────────────────────────────────── */
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  height: calc(100vh - 73px);
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────────── */
+.sidebar {
+  width: 280px;
+  min-width: 280px;
+  border-right: 1px solid #1a1a1a;
+  overflow-y: auto;
+  padding: 16px 0;
+}
+
+.emptyMsg {
+  color: #444;
+  font-size: 0.85rem;
+  text-align: center;
+  padding: 24px;
+}
+
+.groupLabel {
+  font-size: 0.7rem;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  padding: 12px 16px 6px;
+  margin: 0;
+}
+
+.subItem {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 16px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  border-left: 2px solid transparent;
+}
+
+.subItem:hover {
+  background: #111;
+}
+
+.active {
+  background: #111;
+  border-left-color: #0070f3;
+}
+
+.subRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.subName {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #ddd;
+}
+
+.subTask {
+  font-size: 0.78rem;
+  color: #666;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.subDate {
+  font-size: 0.72rem;
+  color: #444;
+}
+
+.pill {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.pillPending {
+  background: #2a2000;
+  color: #f0a500;
+}
+
+.pillApproved {
+  background: #002a10;
+  color: #2ecc71;
+}
+
+.pillRejected {
+  background: #2a0000;
+  color: #e05252;
+}
+
+/* ── Detail panel ────────────────────────────────────────────────────────── */
+.detail {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.emptyDetail {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.detailInner {
+  padding: 28px 32px;
+  max-width: 760px;
+}
+
+.detailHeader {
+  margin-bottom: 24px;
+}
+
+.detailMeta {
+  font-size: 0.78rem;
+  color: #555;
+  margin: 0 0 6px;
+}
+
+.detailTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #f0f0f0;
+  margin: 0;
+}
+
+/* ── Fields ──────────────────────────────────────────────────────────────── */
+.fieldRow {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.fieldRow .field {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.field {
+  margin-bottom: 16px;
+}
+
+.fieldLabel {
+  display: block;
+  font-size: 0.72rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+
+.fieldSelect,
+.fieldTextarea {
+  width: 100%;
+  padding: 9px 12px;
+  border-radius: 8px;
+  border: 1px solid #222;
+  background: #111;
+  color: #ddd;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.fieldSelect:focus,
+.fieldTextarea:focus {
+  border-color: #333;
+}
+
+.fieldTextarea {
+  resize: vertical;
+}
+
+.fieldSelect:disabled,
+.fieldTextarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Flags ───────────────────────────────────────────────────────────────── */
+.flagList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.flagItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  color: #ccc;
+}
+
+.flag_high   { background: #1e0808; }
+.flag_medium { background: #1e1208; }
+.flag_low    { background: #0d1a0d; }
+
+.flagSev {
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  margin-top: 1px;
+}
+
+.flag_high   .flagSev { background: #4a0000; color: #ff6b6b; }
+.flag_medium .flagSev { background: #3a2000; color: #f0a500; }
+.flag_low    .flagSev { background: #002a00; color: #5cb85c; }
+
+/* ── Lists ───────────────────────────────────────────────────────────────── */
+.reviewList {
+  margin: 0;
+  padding-left: 20px;
+  color: #bbb;
+  font-size: 0.88rem;
+  line-height: 1.7;
+}
+
+/* ── Actions ─────────────────────────────────────────────────────────────── */
+.actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.btnApprove {
+  padding: 10px 22px;
+  border-radius: 8px;
+  border: none;
+  background: #0070f3;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btnApprove:hover:not(:disabled) {
+  background: #0060d0;
+}
+
+.btnReject {
+  padding: 10px 22px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: transparent;
+  color: #888;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.btnReject:hover:not(:disabled) {
+  border-color: #e05252;
+  color: #e05252;
+}
+
+.btnApprove:disabled,
+.btnReject:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Reviewed banner ─────────────────────────────────────────────────────── */
+.reviewedBanner {
+  margin-top: 24px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+}
+
+.bannerApproved {
+  background: #002a10;
+  color: #2ecc71;
+}
+
+.bannerRejected {
+  background: #2a0000;
+  color: #e05252;
+}
