@@ -1,8 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  experimental: {
-    serverComponentsExternalPackages: ["mammoth", "xlsx"],
-  },
+  serverExternalPackages: ["mammoth", "xlsx"],
 };
 
 module.exports = nextConfig;
