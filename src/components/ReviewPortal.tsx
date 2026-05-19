@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import { upload } from "@vercel/blob/client";
 import styles from "./ReviewPortal.module.css";
 
-const INTERNS = ["Natalie", "Sam"];
+const INTERNS = ["Alex", "Jordan", "Sam"];
 
 const TASKS = [
   "Q2 variance analysis vs budget",
@@ -54,15 +55,23 @@ export default function ReviewPortal() {
     setSubmitted(false);
 
     try {
+      // Step 1: upload file directly to Blob (bypasses serverless 4.5MB limit)
       setStatusMsg("Uploading file…");
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+      });
+
+      // Step 2: send blob URL + metadata to the review API
+      setStatusMsg("AI is reviewing your work…");
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("fileUrl", blob.url);
+      formData.append("fileName", file.name);
       formData.append("intern", intern);
       formData.append("internEmail", internEmail.trim());
       formData.append("task", task);
       formData.append("notes", notes);
 
-      setStatusMsg("AI is reviewing your work…");
       const res = await fetch("/api/review", { method: "POST", body: formData });
       const data = await res.json();
 
