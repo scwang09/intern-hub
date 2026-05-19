@@ -1,0 +1,25 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --accent: #1a1a2e;
+  --gold: #c9a84c;
+  --surface: #f7f5f0;
+  --muted: #8a8378;
+  --border: #ddd9d2;
+  --white: #ffffff;
+  --font-serif: "DM Serif Display", serif;
+  --font-mono: "DM Mono", monospace;
+  --font-sans: "Instrument Sans", sans-serif;
+}
+
+html, body {
+  font-family: var(--font-sans);
+  background: var(--surface);
+  color: var(--accent);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+input, select, textarea, button {
+  font-family: var(--font-sans);
+}
