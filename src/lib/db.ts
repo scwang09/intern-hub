@@ -29,3 +29,11 @@ export async function updateSubmission(
   await kv.set(`sub:${id}`, updated);
   return updated;
 }
+
+export async function deleteSubmission(id: string): Promise<boolean> {
+  const sub = await getSubmission(id);
+  if (!sub) return false;
+  await kv.del(`sub:${id}`);
+  await kv.lrem("sub_ids", 1, id);
+  return true;
+}
