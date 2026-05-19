@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { saveSubmission } from "@/lib/db";
+import { notifyManagerNewSubmission } from "@/lib/notify";
+import type { Submission, ReviewResult } from "@/lib/types";
 
-// ── Switch back to Anthropic: replace the client + generateReview function below ──
+// ── Switch back to Anthropic: replace genAI client + generateContent call below ──
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
 
 const SYSTEM_PROMPT = `You are a senior strategic finance analyst reviewing intern deliverables.
@@ -27,72 +30,34 @@ export async function POST(req: NextRequest) {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;
     const intern = formData.get("intern") as string;
+    const internEmail = formData.get("internEmail") as string;
     const task = formData.get("task") as string;
     const notes = formData.get("notes") as string;
 
-    if (!file) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-    }
+    if (!file) return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
+    if (!internEmail) return NextResponse.json({ error: "Email is required" }, { status: 400 });
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
     const mimeType = file.type || guessMime(file.name);
 
-    // Build Gemini content parts
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const parts: any[] = [];
 
     if (mimeType === "application/pdf") {
-      // PDFs: send as inline base64
-      parts.push({
-        inlineData: {
-          mimeType: "application/pdf",
-          data: buffer.toString("base64"),
-        },
-      });
-    } else if (
-      mimeType ===
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
-      mimeType === "application/vnd.ms-excel" ||
-      file.name.endsWith(".xlsx") ||
-      file.name.endsWith(".xls")
-    ) {
-      // Excel: parse with xlsx library and send as text
-      const xlsxText = await parseExcel(buffer);
-      parts.push({
-        text: `Excel file contents (${file.name}):\n\n${xlsxText}`,
-      });
-    } else if (
-      mimeType ===
-        "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-      mimeType === "application/msword" ||
-      file.name.endsWith(".docx") ||
-      file.name.endsWith(".doc")
-    ) {
-      // Word: parse with mammoth
-      const docText = await parseWord(buffer);
-      parts.push({
-        text: `Word document contents (${file.name}):\n\n${docText}`,
-      });
+      parts.push({ inlineData: { mimeType: "application/pdf", data: buffer.toString("base64") } });
+    } else if (isExcel(mimeType, file.name)) {
+      parts.push({ text: `Excel file contents (${file.name}):\n\n${await parseExcel(buffer)}` });
+    } else if (isWord(mimeType, file.name)) {
+      parts.push({ text: `Word document contents (${file.name}):\n\n${await parseWord(buffer)}` });
     } else if (mimeType.startsWith("text/") || file.name.endsWith(".csv")) {
-      // Plain text / CSV
-      parts.push({
-        text: `File contents (${file.name}):\n\n${buffer.toString("utf-8")}`,
-      });
+      parts.push({ text: `File contents (${file.name}):\n\n${buffer.toString("utf-8")}` });
     } else {
-      // Unsupported format — review on metadata only
-      parts.push({
-        text: `The intern submitted a file named "${file.name}" (${mimeType}, ${(buffer.length / 1024).toFixed(1)} KB). Direct parsing is not available for this format. Base your review on the file name, task context, and notes. Flag that direct file review was not possible.`,
-      });
+      parts.push({ text: `File: "${file.name}" (${mimeType}, ${(buffer.length / 1024).toFixed(1)} KB). Direct parsing unavailable — review based on context.` });
     }
 
     parts.push({
-      text: `Intern: ${intern}
-Task: ${task}
-File: ${file.name}
-${notes ? `Manager notes: ${notes}` : ""}
-
-Please review this deliverable and return your JSON assessment.`,
+      text: `Intern: ${intern}\nTask: ${task}\nFile: ${file.name}\n${notes ? `Manager notes: ${notes}` : ""}\n\nPlease review this deliverable and return your JSON assessment.`,
     });
 
     const model = genAI.getGenerativeModel({
@@ -110,17 +75,28 @@ Please review this deliverable and return your JSON assessment.`,
     });
 
     const raw = result.response.text();
-    console.log("Gemini raw response:", raw.slice(0, 1000));
-    const parsed = parseJSON(raw);
+    const review = parseJSON(raw) as ReviewResult | null;
 
-    if (!parsed) {
-      return NextResponse.json(
-        { error: "Failed to parse review response", raw: raw.slice(0, 500) },
-        { status: 500 }
-      );
+    if (!review) {
+      return NextResponse.json({ error: "Failed to parse AI review response" }, { status: 500 });
     }
 
-    return NextResponse.json({ review: parsed });
+    const submission: Submission = {
+      id: crypto.randomUUID(),
+      intern,
+      internEmail,
+      task,
+      fileName: file.name,
+      review,
+      status: "pending",
+      managerNotes: "",
+      submittedAt: new Date().toISOString(),
+    };
+
+    await saveSubmission(submission);
+    await notifyManagerNewSubmission(submission);
+
+    return NextResponse.json({ success: true, submissionId: submission.id });
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     return NextResponse.json({ error: message }, { status: 500 });
@@ -143,11 +119,28 @@ function guessMime(filename: string): string {
   return map[ext] || "application/octet-stream";
 }
 
+function isExcel(mime: string, name: string) {
+  return (
+    mime === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
+    mime === "application/vnd.ms-excel" ||
+    name.endsWith(".xlsx") ||
+    name.endsWith(".xls")
+  );
+}
+
+function isWord(mime: string, name: string) {
+  return (
+    mime === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
+    mime === "application/msword" ||
+    name.endsWith(".docx") ||
+    name.endsWith(".doc")
+  );
+}
+
 async function parseExcel(buffer: Buffer): Promise<string> {
   const XLSX = await import("xlsx");
   const workbook = XLSX.read(buffer, { type: "buffer" });
   const lines: string[] = [];
-
   for (const sheetName of workbook.SheetNames) {
     const sheet = workbook.Sheets[sheetName];
     const csv = XLSX.utils.sheet_to_csv(sheet);
@@ -155,13 +148,11 @@ async function parseExcel(buffer: Buffer): Promise<string> {
       lines.push(`=== Sheet: ${sheetName} ===`);
       const rows = csv.split("\n").slice(0, 200);
       lines.push(rows.join("\n"));
-      if (csv.split("\n").length > 200) {
+      if (csv.split("\n").length > 200)
         lines.push(`... (${csv.split("\n").length - 200} more rows truncated)`);
-      }
       lines.push("");
     }
   }
-
   return lines.join("\n") || "No readable data found in spreadsheet.";
 }
 
@@ -176,9 +167,7 @@ function parseJSON(text: string): Record<string, unknown> | null {
     const clean = text.replace(/```json|```/g, "").trim();
     const start = clean.indexOf("{");
     const end = clean.lastIndexOf("}");
-    if (start !== -1 && end !== -1) {
-      return JSON.parse(clean.slice(start, end + 1));
-    }
+    if (start !== -1 && end !== -1) return JSON.parse(clean.slice(start, end + 1));
   } catch (_) {}
   return null;
 }
