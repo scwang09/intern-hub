@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import type { ReviewResult } from "@/lib/types";
 import styles from "./ReviewPortal.module.css";
 
 const INTERNS = ["Alex", "Jordan", "Sam"];
@@ -17,33 +16,23 @@ const TASKS = [
   "Other / unlisted",
 ];
 
-function verdictClass(v: string): string {
-  const l = v.toLowerCase();
-  if (l.includes("approve") && !l.includes("fix")) return styles.verdictApprove;
-  if (l.includes("fix") || l.includes("minor")) return styles.verdictFix;
-  if (l.includes("revision")) return styles.verdictRevision;
-  if (l.includes("reject")) return styles.verdictReject;
-  return styles.verdictUnclear;
-}
-
 export default function ReviewPortal() {
   const [file, setFile] = useState<File | null>(null);
   const [intern, setIntern] = useState(INTERNS[0]);
+  const [internEmail, setInternEmail] = useState("");
   const [task, setTask] = useState(TASKS[0]);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState("");
-  const [review, setReview] = useState<ReviewResult | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
   const [error, setError] = useState("");
-  const [approved, setApproved] = useState(false);
   const [over, setOver] = useState(false);
-  const [copied, setCopied] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const handleFile = (f: File) => {
     setFile(f);
-    setReview(null);
-    setApproved(false);
+    setSubmitted(false);
     setError("");
   };
 
@@ -56,26 +45,31 @@ export default function ReviewPortal() {
 
   const handleSubmit = async () => {
     if (!file) return;
+    if (!internEmail.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
     setLoading(true);
     setError("");
-    setReview(null);
-    setApproved(false);
+    setSubmitted(false);
 
     try {
       setStatusMsg("Uploading file…");
       const formData = new FormData();
       formData.append("file", file);
       formData.append("intern", intern);
+      formData.append("internEmail", internEmail.trim());
       formData.append("task", task);
       formData.append("notes", notes);
 
-      setStatusMsg("Claude is reviewing…");
+      setStatusMsg("AI is reviewing your work…");
       const res = await fetch("/api/review", { method: "POST", body: formData });
       const data = await res.json();
 
       if (!res.ok || data.error) throw new Error(data.error || "Server error");
 
-      setReview({ ...data.review, fileName: file.name, intern, task });
+      setSubmittedEmail(internEmail.trim());
+      setSubmitted(true);
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
@@ -84,38 +78,38 @@ export default function ReviewPortal() {
     }
   };
 
-  const copyToClipboard = () => {
-    if (!review) return;
-    const text = [
-      `Review: ${review.title}`,
-      `Intern: ${review.intern} · Task: ${review.task}`,
-      `Verdict: ${review.verdict}${review.grade ? ` (${review.grade})` : ""}`,
-      "",
-      `Summary:\n${review.summary}`,
-      review.flags?.length
-        ? `\nIssues flagged:\n${review.flags.map((f) => `[${f.severity.toUpperCase()}] ${f.text}`).join("\n")}`
-        : "",
-      review.action_items?.length
-        ? `\nAction items for intern:\n${review.action_items.map((a, i) => `${i + 1}. ${a}`).join("\n")}`
-        : "",
-    ]
-      .filter(Boolean)
-      .join("\n");
-
-    navigator.clipboard.writeText(text).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  };
-
   const reset = () => {
     setFile(null);
-    setReview(null);
-    setApproved(false);
+    setSubmitted(false);
     setError("");
+    setNotes("");
     if (fileRef.current) fileRef.current.value = "";
   };
 
+  // ── Submitted confirmation ────────────────────────────────────────────────
+  if (submitted) {
+    return (
+      <div className={styles.shell}>
+        <div className={styles.masthead}>
+          <h1 className={styles.mastheadTitle}>Deliverable Review</h1>
+          <span className={styles.mastheadMeta}>Strategic Finance · Summer 2026</span>
+        </div>
+        <div className={styles.confirmBox}>
+          <div className={styles.confirmIcon}>✓</div>
+          <h2 className={styles.confirmTitle}>Submitted successfully</h2>
+          <p className={styles.confirmMsg}>
+            Your work has been received and is being reviewed. You&apos;ll be notified
+            at <strong>{submittedEmail}</strong> once the review is ready.
+          </p>
+          <button className={styles.btnOutline} onClick={reset}>
+            Submit another
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Main form ─────────────────────────────────────────────────────────────
   return (
     <div className={styles.shell}>
       {/* Masthead */}
@@ -162,10 +156,20 @@ export default function ReviewPortal() {
       {/* Context fields */}
       <div className={styles.contextGrid}>
         <div className={styles.fieldGroup}>
-          <label htmlFor="intern-select">Intern</label>
+          <label htmlFor="intern-select">Your name</label>
           <select id="intern-select" value={intern} onChange={(e) => setIntern(e.target.value)}>
             {INTERNS.map((n) => <option key={n}>{n}</option>)}
           </select>
+        </div>
+        <div className={styles.fieldGroup}>
+          <label htmlFor="email-input">Your email</label>
+          <input
+            id="email-input"
+            type="email"
+            placeholder="you@example.com"
+            value={internEmail}
+            onChange={(e) => setInternEmail(e.target.value)}
+          />
         </div>
         <div className={styles.fieldGroup}>
           <label htmlFor="task-select">Task / deliverable</label>
@@ -177,7 +181,7 @@ export default function ReviewPortal() {
           <label htmlFor="notes-input">Notes for the reviewer (optional)</label>
           <textarea
             id="notes-input"
-            placeholder="e.g. First attempt — be constructive. Focus on formula accuracy and executive summary quality."
+            placeholder="e.g. First attempt — please focus on formula accuracy and executive summary quality."
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
           />
@@ -196,103 +200,12 @@ export default function ReviewPortal() {
               <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           )}
-          {loading ? "Reviewing…" : "Review deliverable"}
+          {loading ? "Submitting…" : "Submit for review"}
         </button>
         {statusMsg && <span className={styles.statusLine} aria-live="polite">{statusMsg}</span>}
       </div>
 
       {error && <div className={styles.errorBox} role="alert">⚠ {error}</div>}
-
-      {/* Review card */}
-      {review && !approved && (
-        <>
-          <hr className={styles.divider} />
-          <article className={styles.reviewCard}>
-            <div className={styles.reviewHeader}>
-              <div className={styles.reviewHeaderLeft}>
-                <p className={styles.reviewFileName}>{review.intern} · {review.fileName}</p>
-                <h2 className={styles.reviewTitle}>{review.title || review.task}</h2>
-              </div>
-              <div className={styles.reviewHeaderRight}>
-                <span className={`${styles.verdictBadge} ${verdictClass(review.verdict)}`}>
-                  {review.verdict}
-                </span>
-                {review.grade && <span className={styles.grade}>{review.grade}</span>}
-              </div>
-            </div>
-
-            <div className={styles.reviewBody}>
-              <section>
-                <p className={styles.sectionLabel}>Summary</p>
-                <p className={styles.summaryText}>{review.summary}</p>
-              </section>
-
-              {review.flags?.length > 0 && (
-                <section>
-                  <p className={styles.sectionLabel}>Issues flagged</p>
-                  <div className={styles.flagsList}>
-                    {review.flags.map((f, i) => (
-                      <div key={i} className={`${styles.flagItem} ${styles[`flag_${f.severity}`]}`}>
-                        <span className={styles.flagLabel}>{f.severity}</span>
-                        <span>{f.text}</span>
-                      </div>
-                    ))}
-                  </div>
-                </section>
-              )}
-
-              {review.strengths?.length > 0 && (
-                <section>
-                  <p className={styles.sectionLabel}>Strengths</p>
-                  <ul className={styles.strengthsList}>
-                    {review.strengths.map((s, i) => (
-                      <li key={i} className={styles.strengthItem}>
-                        <span className={styles.strengthDot} aria-hidden="true" />
-                        <span>{s}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
-
-              {review.action_items?.length > 0 && (
-                <section>
-                  <p className={styles.sectionLabel}>Action items for intern</p>
-                  <ol className={styles.actionList}>
-                    {review.action_items.map((a, i) => (
-                      <li key={i} className={styles.actionItem}>
-                        <span className={styles.actionNum}>{String(i + 1).padStart(2, "0")}.</span>
-                        <span>{a}</span>
-                      </li>
-                    ))}
-                  </ol>
-                </section>
-              )}
-            </div>
-
-            <div className={styles.reviewFooter}>
-              <button className={styles.btnApprove} onClick={() => setApproved(true)}>
-                Approve
-              </button>
-              <button className={styles.btnOutline} onClick={copyToClipboard}>
-                {copied ? "Copied!" : "Copy summary"}
-              </button>
-              <button className={styles.btnReject} onClick={reset}>
-                Reject &amp; clear
-              </button>
-            </div>
-          </article>
-        </>
-      )}
-
-      {approved && (
-        <>
-          <hr className={styles.divider} />
-          <div className={styles.approvedBanner} role="status">
-            ✓ Deliverable approved — {review?.intern}&apos;s {review?.task} marked complete
-          </div>
-        </>
-      )}
     </div>
   );
 }
