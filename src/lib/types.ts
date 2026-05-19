@@ -22,6 +22,7 @@ export interface Submission {
   internEmail: string;
   task: string;
   fileName: string;
+  fileUrl?: string;
   review: ReviewResult;
   status: "pending" | "approved" | "rejected";
   managerNotes: string;
