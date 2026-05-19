@@ -48,9 +48,7 @@
   outline: none;
 }
 
-.authInput:focus {
-  border-color: #444;
-}
+.authInput:focus { border-color: #444; }
 
 .authBtn {
   padding: 10px;
@@ -63,9 +61,7 @@
   cursor: pointer;
 }
 
-.authBtn:hover {
-  background: #0060d0;
-}
+.authBtn:hover { background: #0060d0; }
 
 .authError {
   color: #e05252;
@@ -75,29 +71,31 @@
 
 /* ── Shell ───────────────────────────────────────────────────────────────── */
 .shell {
-  min-height: 100vh;
+  height: 100vh;
   background: #0a0a0a;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 20px 28px;
+  padding: 16px 24px;
   border-bottom: 1px solid #1a1a1a;
+  flex-shrink: 0;
 }
 
 .title {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #f0f0f0;
   margin: 0;
 }
 
 .sub {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   color: #555;
   margin: 2px 0 0;
   text-transform: uppercase;
@@ -105,159 +103,192 @@
 }
 
 .refreshBtn {
-  padding: 7px 14px;
-  border-radius: 7px;
+  padding: 6px 12px;
+  border-radius: 6px;
   border: 1px solid #2a2a2a;
   background: transparent;
   color: #888;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   cursor: pointer;
 }
 
-.refreshBtn:hover {
-  border-color: #444;
-  color: #ccc;
-}
+.refreshBtn:hover { border-color: #444; color: #ccc; }
 
 /* ── Layout ──────────────────────────────────────────────────────────────── */
 .layout {
   display: flex;
   flex: 1;
   overflow: hidden;
-  height: calc(100vh - 73px);
 }
 
 /* ── Sidebar ─────────────────────────────────────────────────────────────── */
 .sidebar {
-  width: 280px;
-  min-width: 280px;
+  width: 240px;
+  min-width: 240px;
   border-right: 1px solid #1a1a1a;
   overflow-y: auto;
-  padding: 16px 0;
+  padding: 12px 0;
 }
 
 .emptyMsg {
   color: #444;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   text-align: center;
   padding: 24px;
 }
 
 .groupLabel {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   color: #444;
   text-transform: uppercase;
   letter-spacing: 0.07em;
-  padding: 12px 16px 6px;
+  padding: 10px 14px 5px;
   margin: 0;
 }
 
 .subItem {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   width: 100%;
   text-align: left;
-  padding: 10px 16px;
+  padding: 8px 14px;
   background: transparent;
   border: none;
   cursor: pointer;
   border-left: 2px solid transparent;
 }
 
-.subItem:hover {
-  background: #111;
-}
-
-.active {
-  background: #111;
-  border-left-color: #0070f3;
-}
+.subItem:hover { background: #111; }
+.active { background: #111; border-left-color: #0070f3; }
 
 .subRow {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 6px;
 }
 
-.subName {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #ddd;
-}
-
-.subTask {
-  font-size: 0.78rem;
-  color: #666;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.subDate {
-  font-size: 0.72rem;
-  color: #444;
-}
+.subName { font-size: 0.85rem; font-weight: 500; color: #ddd; }
+.subTask { font-size: 0.75rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.subDate { font-size: 0.7rem; color: #444; }
 
 .pill {
-  font-size: 0.65rem;
+  font-size: 0.62rem;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 2px 7px;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
   border-radius: 999px;
   font-weight: 600;
   white-space: nowrap;
 }
 
-.pillPending {
-  background: #2a2000;
-  color: #f0a500;
-}
+.pillPending  { background: #2a2000; color: #f0a500; }
+.pillApproved { background: #002a10; color: #2ecc71; }
+.pillRejected { background: #2a0000; color: #e05252; }
 
-.pillApproved {
-  background: #002a10;
-  color: #2ecc71;
-}
-
-.pillRejected {
-  background: #2a0000;
-  color: #e05252;
-}
-
-/* ── Detail panel ────────────────────────────────────────────────────────── */
-.detail {
-  flex: 1;
-  overflow-y: auto;
-  padding: 0;
-}
-
+/* ── Empty detail ────────────────────────────────────────────────────────── */
 .emptyDetail {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100%;
   color: #333;
   font-size: 0.9rem;
 }
 
-.detailInner {
-  padding: 28px 32px;
-  max-width: 760px;
+/* ── Main area (file + review side by side) ──────────────────────────────── */
+.mainArea {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
 }
 
-.detailHeader {
-  margin-bottom: 24px;
+/* ── File panel ──────────────────────────────────────────────────────────── */
+.filePanel {
+  width: 45%;
+  min-width: 300px;
+  border-right: 1px solid #1a1a1a;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
+
+.filePanelLabel {
+  font-size: 0.75rem;
+  color: #555;
+  padding: 10px 16px;
+  border-bottom: 1px solid #1a1a1a;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.downloadLink {
+  color: #0070f3;
+  font-size: 0.72rem;
+  text-decoration: none;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.downloadLink:hover { text-decoration: underline; }
+
+.pdfFrame {
+  flex: 1;
+  width: 100%;
+  border: none;
+  background: #fff;
+}
+
+.noPreview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: #444;
+  font-size: 0.85rem;
+  padding: 32px;
+  text-align: center;
+}
+
+.downloadBtn {
+  padding: 9px 18px;
+  border-radius: 7px;
+  border: 1px solid #2a2a2a;
+  background: transparent;
+  color: #aaa;
+  font-size: 0.85rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.downloadBtn:hover { border-color: #555; color: #ddd; }
+
+/* ── Review panel ────────────────────────────────────────────────────────── */
+.reviewPanel {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+.detailHeader { margin-bottom: 18px; }
 
 .detailMeta {
-  font-size: 0.78rem;
+  font-size: 0.74rem;
   color: #555;
-  margin: 0 0 6px;
+  margin: 0 0 4px;
 }
 
 .detailTitle {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: #f0f0f0;
   margin: 0;
@@ -266,160 +297,140 @@
 /* ── Fields ──────────────────────────────────────────────────────────────── */
 .fieldRow {
   display: flex;
-  gap: 16px;
-  margin-bottom: 16px;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
-.fieldRow .field {
-  flex: 1;
-  margin-bottom: 0;
-}
+.fieldRow .field { flex: 1; margin-bottom: 0; }
 
-.field {
-  margin-bottom: 16px;
-}
+.field { margin-bottom: 14px; }
 
 .fieldLabel {
   display: block;
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   color: #555;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  margin-bottom: 6px;
+  margin-bottom: 5px;
 }
 
 .fieldSelect,
-.fieldTextarea {
+.fieldTextarea,
+.fieldInput {
   width: 100%;
-  padding: 9px 12px;
-  border-radius: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
   border: 1px solid #222;
   background: #111;
   color: #ddd;
-  font-size: 0.9rem;
+  font-size: 0.85rem;
   font-family: inherit;
   outline: none;
   box-sizing: border-box;
 }
 
 .fieldSelect:focus,
-.fieldTextarea:focus {
-  border-color: #333;
-}
+.fieldTextarea:focus,
+.fieldInput:focus { border-color: #333; }
 
-.fieldTextarea {
-  resize: vertical;
-}
+.fieldTextarea { resize: vertical; }
 
 .fieldSelect:disabled,
-.fieldTextarea:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.fieldTextarea:disabled,
+.fieldInput:disabled { opacity: 0.5; cursor: not-allowed; }
 
-/* ── Flags ───────────────────────────────────────────────────────────────── */
-.flagList {
+/* ── Editable lists ──────────────────────────────────────────────────────── */
+.editList {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.flagItem {
+.flagRow,
+.listRow {
   display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: 7px;
-  font-size: 0.85rem;
-  color: #ccc;
+  gap: 6px;
+  align-items: center;
 }
 
-.flag_high   { background: #1e0808; }
-.flag_medium { background: #1e1208; }
-.flag_low    { background: #0d1a0d; }
-
-.flagSev {
-  font-size: 0.65rem;
-  text-transform: uppercase;
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  padding: 2px 6px;
-  border-radius: 4px;
-  white-space: nowrap;
-  margin-top: 1px;
+.sevSelect {
+  width: 90px;
+  min-width: 90px;
+  flex-shrink: 0;
 }
 
-.flag_high   .flagSev { background: #4a0000; color: #ff6b6b; }
-.flag_medium .flagSev { background: #3a2000; color: #f0a500; }
-.flag_low    .flagSev { background: #002a00; color: #5cb85c; }
-
-/* ── Lists ───────────────────────────────────────────────────────────────── */
-.reviewList {
-  margin: 0;
-  padding-left: 20px;
-  color: #bbb;
-  font-size: 0.88rem;
-  line-height: 1.7;
+.removeBtn {
+  background: none;
+  border: none;
+  color: #444;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+  flex-shrink: 0;
 }
+
+.removeBtn:hover { color: #e05252; }
+
+.addBtn {
+  background: none;
+  border: 1px dashed #2a2a2a;
+  border-radius: 6px;
+  color: #555;
+  font-size: 0.78rem;
+  padding: 5px 10px;
+  cursor: pointer;
+  text-align: left;
+  margin-top: 2px;
+}
+
+.addBtn:hover { border-color: #444; color: #aaa; }
 
 /* ── Actions ─────────────────────────────────────────────────────────────── */
 .actions {
   display: flex;
-  gap: 12px;
-  margin-top: 24px;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #1a1a1a;
 }
 
 .btnApprove {
-  padding: 10px 22px;
-  border-radius: 8px;
+  padding: 9px 20px;
+  border-radius: 7px;
   border: none;
   background: #0070f3;
   color: #fff;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   font-weight: 500;
   cursor: pointer;
 }
 
-.btnApprove:hover:not(:disabled) {
-  background: #0060d0;
-}
+.btnApprove:hover:not(:disabled) { background: #0060d0; }
 
 .btnReject {
-  padding: 10px 22px;
-  border-radius: 8px;
-  border: 1px solid #333;
+  padding: 9px 20px;
+  border-radius: 7px;
+  border: 1px solid #2a2a2a;
   background: transparent;
   color: #888;
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   cursor: pointer;
 }
 
-.btnReject:hover:not(:disabled) {
-  border-color: #e05252;
-  color: #e05252;
-}
+.btnReject:hover:not(:disabled) { border-color: #e05252; color: #e05252; }
 
 .btnApprove:disabled,
-.btnReject:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
+.btnReject:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ── Reviewed banner ─────────────────────────────────────────────────────── */
 .reviewedBanner {
-  margin-top: 24px;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 0.88rem;
+  margin-top: 20px;
+  padding: 10px 14px;
+  border-radius: 7px;
+  font-size: 0.85rem;
   font-weight: 500;
 }
 
-.bannerApproved {
-  background: #002a10;
-  color: #2ecc71;
-}
-
-.bannerRejected {
-  background: #2a0000;
-  color: #e05252;
-}
+.bannerApproved { background: #002a10; color: #2ecc71; }
+.bannerRejected { background: #2a0000; color: #e05252; }
