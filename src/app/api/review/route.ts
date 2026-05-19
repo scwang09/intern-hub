@@ -102,7 +102,7 @@ Please review this deliverable and return your JSON assessment.`,
 
     const result = await model.generateContent({
       contents: [{ role: "user", parts }],
-      generationConfig: { maxOutputTokens: 1000 },
+      generationConfig: { maxOutputTokens: 2000, temperature: 0.1 },
     });
 
     const raw = result.response.text();
