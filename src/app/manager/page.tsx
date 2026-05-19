@@ -1,11 +1,14 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Submission, ReviewResult } from "@/lib/types";
+import type { Submission, ReviewResult, ReviewFlag } from "@/lib/types";
 import styles from "./Manager.module.css";
 
 const VERDICTS = ["Approve", "Approve with minor fixes", "Needs revision", "Reject"];
 const GRADES = ["A", "B+", "B", "C+", "C", "D"];
+const SEVERITIES = ["high", "medium", "low"];
+
+const isPdf = (fileName: string) => fileName.toLowerCase().endsWith(".pdf");
 
 export default function ManagerPage() {
   const [password, setPassword] = useState("");
@@ -60,10 +63,52 @@ export default function ManagerPage() {
   };
 
   const handleSelect = (sub: Submission) => {
-    setSelected({ ...sub });
+    setSelected({ ...sub, review: { ...sub.review } });
     setManagerNotes(sub.managerNotes ?? "");
   };
 
+  // ── Review field helpers ───────────────────────────────────────────────────
+  const updateReviewField = <K extends keyof ReviewResult>(field: K, value: ReviewResult[K]) => {
+    if (!selected) return;
+    setSelected({ ...selected, review: { ...selected.review, [field]: value } });
+  };
+
+  const updateFlag = (i: number, key: keyof ReviewFlag, value: string) => {
+    if (!selected) return;
+    const flags = selected.review.flags.map((f, idx) =>
+      idx === i ? { ...f, [key]: value } : f
+    );
+    updateReviewField("flags", flags);
+  };
+
+  const addFlag = () => {
+    if (!selected) return;
+    updateReviewField("flags", [...selected.review.flags, { severity: "medium", text: "" }]);
+  };
+
+  const removeFlag = (i: number) => {
+    if (!selected) return;
+    updateReviewField("flags", selected.review.flags.filter((_, idx) => idx !== i));
+  };
+
+  const updateListItem = (field: "strengths" | "action_items", i: number, value: string) => {
+    if (!selected) return;
+    const arr = [...selected.review[field]];
+    arr[i] = value;
+    updateReviewField(field, arr);
+  };
+
+  const addListItem = (field: "strengths" | "action_items") => {
+    if (!selected) return;
+    updateReviewField(field, [...selected.review[field], ""]);
+  };
+
+  const removeListItem = (field: "strengths" | "action_items", i: number) => {
+    if (!selected) return;
+    updateReviewField(field, selected.review[field].filter((_, idx) => idx !== i));
+  };
+
+  // ── Approve / Reject ───────────────────────────────────────────────────────
   const handleAction = async (status: "approved" | "rejected") => {
     if (!selected) return;
     setSaving(true);
@@ -86,15 +131,11 @@ export default function ManagerPage() {
     }
   };
 
-  const updateReviewField = <K extends keyof ReviewResult>(field: K, value: ReviewResult[K]) => {
-    if (!selected) return;
-    setSelected({ ...selected, review: { ...selected.review, [field]: value } });
-  };
-
   const pending = submissions.filter((s) => s.status === "pending");
   const reviewed = submissions.filter((s) => s.status !== "pending");
+  const editable = selected?.status === "pending";
 
-  // ── Auth gate ─────────────────────────────────────────────────────────────
+  // ── Auth gate ──────────────────────────────────────────────────────────────
   if (!authed) {
     return (
       <div className={styles.authWrap}>
@@ -110,9 +151,7 @@ export default function ManagerPage() {
               className={styles.authInput}
               autoFocus
             />
-            <button type="submit" className={styles.authBtn}>
-              Sign in
-            </button>
+            <button type="submit" className={styles.authBtn}>Sign in</button>
           </form>
           {authError && <p className={styles.authError}>{authError}</p>}
         </div>
@@ -120,7 +159,7 @@ export default function ManagerPage() {
     );
   }
 
-  // ── Dashboard ─────────────────────────────────────────────────────────────
+  // ── Dashboard ──────────────────────────────────────────────────────────────
   return (
     <div className={styles.shell}>
       <div className={styles.topbar}>
@@ -143,7 +182,6 @@ export default function ManagerPage() {
           {!loading && submissions.length === 0 && (
             <p className={styles.emptyMsg}>No submissions yet.</p>
           )}
-
           {pending.length > 0 && (
             <section>
               <p className={styles.groupLabel}>Pending ({pending.length})</p>
@@ -158,14 +196,11 @@ export default function ManagerPage() {
                     <span className={`${styles.pill} ${styles.pillPending}`}>pending</span>
                   </div>
                   <span className={styles.subTask}>{sub.task}</span>
-                  <span className={styles.subDate}>
-                    {new Date(sub.submittedAt).toLocaleDateString()}
-                  </span>
+                  <span className={styles.subDate}>{new Date(sub.submittedAt).toLocaleDateString()}</span>
                 </button>
               ))}
             </section>
           )}
-
           {reviewed.length > 0 && (
             <section>
               <p className={styles.groupLabel}>Reviewed ({reviewed.length})</p>
@@ -177,44 +212,67 @@ export default function ManagerPage() {
                 >
                   <div className={styles.subRow}>
                     <span className={styles.subName}>{sub.intern}</span>
-                    <span
-                      className={`${styles.pill} ${
-                        sub.status === "approved" ? styles.pillApproved : styles.pillRejected
-                      }`}
-                    >
+                    <span className={`${styles.pill} ${sub.status === "approved" ? styles.pillApproved : styles.pillRejected}`}>
                       {sub.status}
                     </span>
                   </div>
                   <span className={styles.subTask}>{sub.task}</span>
-                  <span className={styles.subDate}>
-                    {new Date(sub.submittedAt).toLocaleDateString()}
-                  </span>
+                  <span className={styles.subDate}>{new Date(sub.submittedAt).toLocaleDateString()}</span>
                 </button>
               ))}
             </section>
           )}
         </aside>
 
-        {/* Detail panel */}
-        <main className={styles.detail}>
-          {!selected ? (
-            <div className={styles.emptyDetail}>
-              <p>Select a submission to review</p>
-            </div>
-          ) : (
-            <div className={styles.detailInner}>
-              <div className={styles.detailHeader}>
-                <div>
-                  <p className={styles.detailMeta}>
-                    {selected.intern} · {selected.internEmail} · {selected.fileName}
-                  </p>
-                  <h2 className={styles.detailTitle}>
-                    {selected.review.title || selected.task}
-                  </h2>
+        {/* Main area */}
+        {!selected ? (
+          <div className={styles.emptyDetail}>
+            <p>Select a submission to review</p>
+          </div>
+        ) : (
+          <div className={styles.mainArea}>
+            {/* File viewer panel */}
+            <div className={styles.filePanel}>
+              <p className={styles.filePanelLabel}>
+                {selected.fileName}
+                {selected.fileUrl && (
+                  <a href={selected.fileUrl} target="_blank" rel="noopener noreferrer" className={styles.downloadLink}>
+                    ↗ Open
+                  </a>
+                )}
+              </p>
+              {selected.fileUrl && isPdf(selected.fileName) ? (
+                <iframe
+                  src={selected.fileUrl}
+                  className={styles.pdfFrame}
+                  title="Submitted file"
+                />
+              ) : selected.fileUrl ? (
+                <div className={styles.noPreview}>
+                  <p>Preview not available for this file type.</p>
+                  <a href={selected.fileUrl} target="_blank" rel="noopener noreferrer" className={styles.downloadBtn}>
+                    Download {selected.fileName}
+                  </a>
                 </div>
+              ) : (
+                <div className={styles.noPreview}>
+                  <p>File not available for preview.</p>
+                </div>
+              )}
+            </div>
+
+            {/* Review panel */}
+            <div className={styles.reviewPanel}>
+              <div className={styles.detailHeader}>
+                <p className={styles.detailMeta}>
+                  {selected.intern} · {selected.internEmail}
+                </p>
+                <h2 className={styles.detailTitle}>
+                  {selected.review.title || selected.task}
+                </h2>
               </div>
 
-              {/* Editable verdict + grade */}
+              {/* Verdict + Grade */}
               <div className={styles.fieldRow}>
                 <div className={styles.field}>
                   <label className={styles.fieldLabel}>Verdict</label>
@@ -222,11 +280,9 @@ export default function ManagerPage() {
                     className={styles.fieldSelect}
                     value={selected.review.verdict}
                     onChange={(e) => updateReviewField("verdict", e.target.value)}
-                    disabled={selected.status !== "pending"}
+                    disabled={!editable}
                   >
-                    {VERDICTS.map((v) => (
-                      <option key={v}>{v}</option>
-                    ))}
+                    {VERDICTS.map((v) => <option key={v}>{v}</option>)}
                   </select>
                 </div>
                 <div className={styles.field}>
@@ -235,77 +291,120 @@ export default function ManagerPage() {
                     className={styles.fieldSelect}
                     value={selected.review.grade}
                     onChange={(e) => updateReviewField("grade", e.target.value)}
-                    disabled={selected.status !== "pending"}
+                    disabled={!editable}
                   >
-                    {GRADES.map((g) => (
-                      <option key={g}>{g}</option>
-                    ))}
+                    {GRADES.map((g) => <option key={g}>{g}</option>)}
                   </select>
                 </div>
               </div>
 
+              {/* Summary */}
               <div className={styles.field}>
-                <label className={styles.fieldLabel}>Summary (editable)</label>
+                <label className={styles.fieldLabel}>Summary</label>
                 <textarea
                   className={styles.fieldTextarea}
                   value={selected.review.summary}
                   rows={4}
                   onChange={(e) => updateReviewField("summary", e.target.value)}
-                  disabled={selected.status !== "pending"}
+                  disabled={!editable}
                 />
               </div>
 
-              {selected.review.flags?.length > 0 && (
-                <div className={styles.field}>
-                  <label className={styles.fieldLabel}>Issues flagged</label>
-                  <div className={styles.flagList}>
-                    {selected.review.flags.map((f, i) => (
-                      <div key={i} className={`${styles.flagItem} ${styles[`flag_${f.severity}`]}`}>
-                        <span className={styles.flagSev}>{f.severity}</span>
-                        <span>{f.text}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {selected.review.strengths?.length > 0 && (
-                <div className={styles.field}>
-                  <label className={styles.fieldLabel}>Strengths</label>
-                  <ul className={styles.reviewList}>
-                    {selected.review.strengths.map((s, i) => (
-                      <li key={i}>{s}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-
-              {selected.review.action_items?.length > 0 && (
-                <div className={styles.field}>
-                  <label className={styles.fieldLabel}>Action items</label>
-                  <ol className={styles.reviewList}>
-                    {selected.review.action_items.map((a, i) => (
-                      <li key={i}>{a}</li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-
+              {/* Flags */}
               <div className={styles.field}>
-                <label className={styles.fieldLabel}>
-                  Your notes to the intern (optional, sent with review)
-                </label>
+                <label className={styles.fieldLabel}>Issues flagged</label>
+                <div className={styles.editList}>
+                  {selected.review.flags.map((f, i) => (
+                    <div key={i} className={styles.flagRow}>
+                      <select
+                        className={`${styles.fieldSelect} ${styles.sevSelect}`}
+                        value={f.severity}
+                        onChange={(e) => updateFlag(i, "severity", e.target.value)}
+                        disabled={!editable}
+                      >
+                        {SEVERITIES.map((s) => <option key={s}>{s}</option>)}
+                      </select>
+                      <input
+                        className={styles.fieldInput}
+                        value={f.text}
+                        onChange={(e) => updateFlag(i, "text", e.target.value)}
+                        disabled={!editable}
+                        placeholder="Describe the issue…"
+                      />
+                      {editable && (
+                        <button className={styles.removeBtn} onClick={() => removeFlag(i)}>×</button>
+                      )}
+                    </div>
+                  ))}
+                  {editable && (
+                    <button className={styles.addBtn} onClick={addFlag}>+ Add issue</button>
+                  )}
+                </div>
+              </div>
+
+              {/* Strengths */}
+              <div className={styles.field}>
+                <label className={styles.fieldLabel}>Strengths</label>
+                <div className={styles.editList}>
+                  {selected.review.strengths.map((s, i) => (
+                    <div key={i} className={styles.listRow}>
+                      <input
+                        className={styles.fieldInput}
+                        value={s}
+                        onChange={(e) => updateListItem("strengths", i, e.target.value)}
+                        disabled={!editable}
+                        placeholder="Strength…"
+                      />
+                      {editable && (
+                        <button className={styles.removeBtn} onClick={() => removeListItem("strengths", i)}>×</button>
+                      )}
+                    </div>
+                  ))}
+                  {editable && (
+                    <button className={styles.addBtn} onClick={() => addListItem("strengths")}>+ Add strength</button>
+                  )}
+                </div>
+              </div>
+
+              {/* Action items */}
+              <div className={styles.field}>
+                <label className={styles.fieldLabel}>Action items</label>
+                <div className={styles.editList}>
+                  {selected.review.action_items.map((a, i) => (
+                    <div key={i} className={styles.listRow}>
+                      <input
+                        className={styles.fieldInput}
+                        value={a}
+                        onChange={(e) => updateListItem("action_items", i, e.target.value)}
+                        disabled={!editable}
+                        placeholder="Action item…"
+                      />
+                      {editable && (
+                        <button className={styles.removeBtn} onClick={() => removeListItem("action_items", i)}>×</button>
+                      )}
+                    </div>
+                  ))}
+                  {editable && (
+                    <button className={styles.addBtn} onClick={() => addListItem("action_items")}>+ Add action item</button>
+                  )}
+                </div>
+              </div>
+
+              {/* Manager notes */}
+              <div className={styles.field}>
+                <label className={styles.fieldLabel}>Your notes to the intern (optional)</label>
                 <textarea
                   className={styles.fieldTextarea}
-                  placeholder="Add any personal context or encouragement for the intern…"
+                  placeholder="Add any personal context or encouragement…"
                   value={managerNotes}
                   rows={3}
                   onChange={(e) => setManagerNotes(e.target.value)}
-                  disabled={selected.status !== "pending"}
+                  disabled={!editable}
                 />
               </div>
 
-              {selected.status === "pending" ? (
+              {/* Actions */}
+              {editable ? (
                 <div className={styles.actions}>
                   <button
                     className={styles.btnApprove}
@@ -323,19 +422,14 @@ export default function ManagerPage() {
                   </button>
                 </div>
               ) : (
-                <div
-                  className={`${styles.reviewedBanner} ${
-                    selected.status === "approved" ? styles.bannerApproved : styles.bannerRejected
-                  }`}
-                >
+                <div className={`${styles.reviewedBanner} ${selected.status === "approved" ? styles.bannerApproved : styles.bannerRejected}`}>
                   {selected.status === "approved" ? "✓ Approved" : "✗ Rejected"}
-                  {selected.reviewedAt &&
-                    ` · ${new Date(selected.reviewedAt).toLocaleString()}`}
+                  {selected.reviewedAt && ` · ${new Date(selected.reviewedAt).toLocaleString()}`}
                 </div>
               )}
             </div>
-          )}
-        </main>
+          </div>
+        )}
       </div>
     </div>
   );
