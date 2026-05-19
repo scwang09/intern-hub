@@ -1,10 +1,21 @@
+import nodemailer from "nodemailer";
 import type { Submission } from "./types";
 
 const SLACK_WEBHOOK = process.env.SLACK_WEBHOOK_URL;
-const RESEND_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL ?? "noreply@resend.dev";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "";
 const MANAGER_EMAIL = "stanley.wang@twinhealth.com";
+
+function getTransporter() {
+  return nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    secure: false,
+    auth: {
+      user: process.env.GMAIL_USER,
+      pass: process.env.GMAIL_APP_PASSWORD,
+    },
+  });
+}
 
 async function postSlack(text: string) {
   if (!SLACK_WEBHOOK) return;
@@ -16,14 +27,13 @@ async function postSlack(text: string) {
 }
 
 async function sendEmail(to: string, subject: string, html: string) {
-  if (!RESEND_KEY) return;
-  await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${RESEND_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ from: FROM_EMAIL, to, subject, html }),
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) return;
+  const transporter = getTransporter();
+  await transporter.sendMail({
+    from: `"Intern Hub" <${process.env.GMAIL_USER}>`,
+    to,
+    subject,
+    html,
   }).catch(() => {});
 }
 
@@ -40,13 +50,13 @@ export async function notifyManagerNewSubmission(sub: Submission) {
     `New submission: ${intern} — ${task}`,
     `<h2 style="font-family:sans-serif">New Intern Submission</h2>
      <p style="font-family:sans-serif"><strong>${intern}</strong> (${internEmail}) submitted their work.</p>
-     <table style="font-family:sans-serif;border-collapse:collapse">
+     <table style="font-family:sans-serif">
        <tr><td style="padding:4px 12px 4px 0;color:#666">Task</td><td>${task}</td></tr>
        <tr><td style="padding:4px 12px 4px 0;color:#666">File</td><td>${fileName}</td></tr>
        <tr><td style="padding:4px 12px 4px 0;color:#666">AI Verdict</td><td>${review.verdict} (${review.grade})</td></tr>
      </table>
      <p style="font-family:sans-serif;color:#444">${review.summary}</p>
-     <p><a href="${dashboardUrl}" style="background:#0070f3;color:#fff;padding:10px 20px;text-decoration:none;border-radius:6px;font-family:sans-serif">Review in dashboard →</a></p>`
+     <p><a href="${dashboardUrl}" style="background:#0070f3;color:#fff;padding:10px 20px;text-decoration:none;border-radius:6px;font-family:sans-serif;display:inline-block;margin-top:8px">Review in dashboard →</a></p>`
   );
 }
 
@@ -80,6 +90,6 @@ export async function notifyInternReviewReady(sub: Submission) {
      ${strengthsHtml}
      ${actionHtml}
      ${notesHtml}
-     <p style="font-family:sans-serif;color:#888;font-size:13px">Sent via Intern Hub · Strategic Finance Summer 2026</p>`
+     <p style="font-family:sans-serif;color:#888;font-size:13px;margin-top:32px">Sent via Intern Hub · Strategic Finance Summer 2026</p>`
   );
 }
