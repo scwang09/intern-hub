@@ -4,7 +4,7 @@ import { useState, useRef, useCallback } from "react";
 import { upload } from "@vercel/blob/client";
 import styles from "./ReviewPortal.module.css";
 
-const INTERNS = ["Alex", "Jordan", "Sam"];
+const INTERNS = ["Natalie", "Sam"];
 
 const TASKS = [
   "Q2 variance analysis vs budget",
