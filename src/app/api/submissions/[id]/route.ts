@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSubmission, updateSubmission } from "@/lib/db";
+import { getSubmission, updateSubmission, deleteSubmission } from "@/lib/db";
 import { notifyInternReviewReady } from "@/lib/notify";
 
 function verifyAuth(req: NextRequest): boolean {
@@ -41,4 +41,15 @@ export async function PATCH(
   }
 
   return NextResponse.json({ submission: updated });
+}
+
+export async function DELETE(
+  req: NextRequest,
+  context: { params: Promise<{ id: string }> }
+) {
+  if (!verifyAuth(req)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const { id } = await context.params;
+  const ok = await deleteSubmission(id);
+  if (!ok) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json({ success: true });
 }
