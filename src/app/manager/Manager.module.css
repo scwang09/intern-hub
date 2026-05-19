@@ -279,7 +279,13 @@
   padding: 20px 24px;
 }
 
-.detailHeader { margin-bottom: 18px; }
+.detailHeader {
+  margin-bottom: 18px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
 
 .detailMeta {
   font-size: 0.74rem;
@@ -292,6 +298,23 @@
   font-weight: 600;
   color: #f0f0f0;
   margin: 0;
+}
+
+.btnDelete {
+  padding: 5px 10px;
+  border-radius: 6px;
+  border: 1px solid #2a2a2a;
+  background: transparent;
+  color: #555;
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.btnDelete:hover {
+  border-color: #e05252;
+  color: #e05252;
 }
 
 /* ── Fields ──────────────────────────────────────────────────────────────── */
