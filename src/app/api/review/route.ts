@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
+import { put } from "@vercel/blob";
 import { saveSubmission } from "@/lib/db";
 import { notifyManagerNewSubmission } from "@/lib/notify";
 import type { Submission, ReviewResult } from "@/lib/types";
@@ -81,12 +82,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Failed to parse AI review response" }, { status: 500 });
     }
 
+    // Upload file to Blob storage for manager to view
+    let fileUrl: string | undefined;
+    try {
+      const blob = await put(`submissions/${Date.now()}-${file.name}`, file, {
+        access: "public",
+      });
+      fileUrl = blob.url;
+    } catch (_) {
+      // Non-fatal — submission still works without file preview
+    }
+
     const submission: Submission = {
       id: crypto.randomUUID(),
       intern,
       internEmail,
       task,
       fileName: file.name,
+      fileUrl,
       review,
       status: "pending",
       managerNotes: "",
