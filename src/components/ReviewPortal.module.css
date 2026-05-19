@@ -471,6 +471,61 @@
   animation: fadeUp 0.3s ease;
 }
 
+/* ── Confirmation box ── */
+.confirmBox {
+  text-align: center;
+  padding: 64px 32px;
+  animation: fadeUp 0.3s ease;
+}
+
+.confirmIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #e8f5e9;
+  color: #2e7d32;
+  font-size: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.confirmTitle {
+  font-family: var(--font-serif);
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--accent);
+  margin: 0 0 12px;
+}
+
+.confirmMsg {
+  font-size: 14px;
+  line-height: 1.7;
+  color: #555;
+  max-width: 400px;
+  margin: 0 auto 28px;
+}
+
+/* ── Email input ── */
+.fieldGroup input[type="email"] {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--accent);
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 10px 12px;
+  outline: none;
+  transition: border-color 0.15s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.fieldGroup input[type="email"]:focus {
+  border-color: var(--accent);
+}
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .shell { padding: 24px 16px; }
