@@ -144,6 +144,19 @@ export default function ManagerPage() {
     }
   };
 
+  const handleDelete = async () => {
+    if (!selected) return;
+    if (!window.confirm(`Delete this submission from ${selected.intern}? This cannot be undone.`)) return;
+    const res = await fetch(`/api/submissions/${selected.id}`, {
+      method: "DELETE",
+      headers: { "x-manager-password": savedPwd },
+    });
+    if (res.ok) {
+      setSubmissions((prev) => prev.filter((s) => s.id !== selected.id));
+      setSelected(null);
+    }
+  };
+
   const pending = submissions.filter((s) => s.status === "pending");
   const reviewed = submissions.filter((s) => s.status !== "pending");
   const editable = selected?.status === "pending";
@@ -289,12 +302,17 @@ export default function ManagerPage() {
             {/* Review panel */}
             <div className={styles.reviewPanel}>
               <div className={styles.detailHeader}>
-                <p className={styles.detailMeta}>
-                  {selected.intern} · {selected.internEmail}
-                </p>
-                <h2 className={styles.detailTitle}>
-                  {selected.review.title || selected.task}
-                </h2>
+                <div>
+                  <p className={styles.detailMeta}>
+                    {selected.intern} · {selected.internEmail}
+                  </p>
+                  <h2 className={styles.detailTitle}>
+                    {selected.review.title || selected.task}
+                  </h2>
+                </div>
+                <button className={styles.btnDelete} onClick={handleDelete} title="Delete submission">
+                  🗑 Delete
+                </button>
               </div>
 
               {/* Verdict + Grade */}
