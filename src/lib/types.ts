@@ -11,8 +11,20 @@ export interface ReviewResult {
   strengths: string[];
   action_items: string[];
   grade: string;
-  // attached by client
   fileName?: string;
   intern?: string;
   task?: string;
+}
+
+export interface Submission {
+  id: string;
+  intern: string;
+  internEmail: string;
+  task: string;
+  fileName: string;
+  review: ReviewResult;
+  status: "pending" | "approved" | "rejected";
+  managerNotes: string;
+  submittedAt: string;
+  reviewedAt?: string;
 }
