@@ -110,6 +110,7 @@ Please review this deliverable and return your JSON assessment.`,
     });
 
     const raw = result.response.text();
+    console.log("Gemini raw response:", raw.slice(0, 1000));
     const parsed = parseJSON(raw);
 
     if (!parsed) {
