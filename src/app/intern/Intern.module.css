@@ -395,6 +395,142 @@
 
 .submitTaskLink:hover { text-decoration: underline; }
 
+/* ── Task card expanded state ─────────────────────────────────────────────── */
+.taskCardExpanded {
+  border-color: #2a2a2a;
+}
+
+.expandBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: #0070f3;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0;
+  white-space: nowrap;
+}
+
+.expandBtn:hover { text-decoration: underline; }
+
+/* ── Feedback panel (inside expanded task card) ───────────────────────────── */
+.feedbackPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feedbackPanelDivider {
+  height: 1px;
+  background: #1e1e1e;
+  margin: 2px 0;
+}
+
+.feedbackPanelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.feedbackPanelGradeWrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.feedbackPanelGrade {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.gradeApproved { color: #2ecc71; }
+.gradeRejected { color: #e05252; }
+
+.feedbackPanelVerdict {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ddd;
+}
+
+.feedbackPanelDate {
+  font-size: 0.72rem;
+  color: #444;
+  margin-top: 2px;
+}
+
+.feedbackPanelSummary {
+  font-size: 0.85rem;
+  color: #aaa;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.feedbackPanelSection {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.feedbackPanelSectionTitle {
+  font-size: 0.65rem;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+/* Flags */
+.flagRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  padding: 5px 8px;
+  border-radius: 5px;
+}
+
+.flag_high   { background: #1a0505; color: #e07070; }
+.flag_medium { background: #1a1200; color: #d4a040; }
+.flag_low    { background: #0f0f0f; color: #777; }
+
+.flagSev {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 1px 5px;
+  border-radius: 3px;
+  white-space: nowrap;
+  margin-top: 1px;
+  flex-shrink: 0;
+}
+
+.flag_high   .flagSev { background: #3a0a0a; color: #e05252; }
+.flag_medium .flagSev { background: #2a1a00; color: #f0a500; }
+.flag_low    .flagSev { background: #1e1e1e; color: #555; }
+
+.flagText { flex: 1; }
+
+/* Strengths */
+.strengthRow {
+  font-size: 0.82rem;
+  color: #4edc8a;
+  line-height: 1.4;
+  padding: 2px 0;
+}
+
+/* Action items */
+.actionRow {
+  font-size: 0.82rem;
+  color: #aaa;
+  line-height: 1.4;
+  padding: 2px 0;
+}
+
 /* ── Weekly pane ─────────────────────────────────────────────────────────── */
 .weeklyPane {
   display: flex;
