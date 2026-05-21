@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSubmission, updateSubmission, deleteSubmission } from "@/lib/db";
+import { getSubmission, updateSubmission, deleteSubmission, updateTask } from "@/lib/db";
 import { notifyInternReviewReady } from "@/lib/notify";
 
 function verifyAuth(req: NextRequest): boolean {
@@ -35,6 +35,15 @@ export async function PATCH(
   });
 
   if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Sync task status
+  if (updated.taskId) {
+    if (status === "approved") {
+      await updateTask(updated.taskId, { status: "complete" });
+    } else if (status === "rejected") {
+      await updateTask(updated.taskId, { status: "needs_revision" });
+    }
+  }
 
   if (status === "approved") {
     await notifyInternReviewReady(updated);
