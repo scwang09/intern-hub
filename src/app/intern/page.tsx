@@ -6,6 +6,14 @@ import styles from "./Intern.module.css";
 
 const INTERNS = ["Natalie", "Sam"];
 
+function getViewerUrl(fileName: string, fileUrl: string): string {
+  const n = fileName.toLowerCase();
+  if (n.endsWith(".pdf")) return fileUrl;
+  if (n.endsWith(".xlsx") || n.endsWith(".xls") || n.endsWith(".docx") || n.endsWith(".doc"))
+    return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`;
+  return fileUrl;
+}
+
 const STATUS_LABELS: Record<TaskStatus, string> = {
   todo: "To Do",
   in_progress: "In Progress",
@@ -134,6 +142,23 @@ export default function InternPage() {
     setPin("");
     setTasks([]);
     setSubmissions([]);
+  };
+
+  const handleMarkInProgress = async (taskId: string) => {
+    if (!auth) return;
+    const res = await fetch(`/api/intern/tasks/${taskId}`, {
+      method: "PATCH",
+      headers: {
+        "x-intern-name": auth.name,
+        "x-intern-pin": auth.pin,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ status: "in_progress" }),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      setTasks(prev => prev.map(t => t.id === taskId ? data.task : t));
+    }
   };
 
   // ── Derived data ────────────────────────────────────────────────────────────
@@ -347,6 +372,14 @@ export default function InternPage() {
                                 Submit deliverable →
                               </a>
                             )}
+                            {(task.status === "todo" || task.status === "needs_revision") && (
+                              <button
+                                className={styles.markInProgressBtn}
+                                onClick={() => handleMarkInProgress(task.id)}
+                              >
+                                Mark as In Progress
+                              </button>
+                            )}
 
                             {/* ── Expanded feedback panel ── */}
                             {isExpanded && reviewedSubs.length > 0 && (
@@ -423,6 +456,18 @@ export default function InternPage() {
                                       <div className={styles.managerNote}>
                                         <span className={styles.managerNoteLabel}>From your manager:</span> {rev.managerNotes}
                                       </div>
+                                    )}
+
+                                    {/* View submitted file */}
+                                    {rev.fileUrl && (
+                                      <a
+                                        href={getViewerUrl(rev.fileName, rev.fileUrl)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className={styles.viewFileLink}
+                                      >
+                                        View submitted file →
+                                      </a>
                                     )}
                                   </div>
                                 ))}
@@ -523,6 +568,16 @@ export default function InternPage() {
                                   <div className={styles.managerNote}>
                                     <span className={styles.managerNoteLabel}>From your manager:</span> {sub.managerNotes}
                                   </div>
+                                )}
+                                {sub.fileUrl && (
+                                  <a
+                                    href={getViewerUrl(sub.fileName, sub.fileUrl)}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={styles.viewFileLink}
+                                  >
+                                    View submitted file →
+                                  </a>
                                 )}
                               </div>
                             )}
