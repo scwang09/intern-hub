@@ -777,6 +777,80 @@
 .btnApprove:disabled,
 .btnReject:disabled { opacity: 0.5; cursor: not-allowed; }
 
+/* ── Confirm box ─────────────────────────────────────────────────────────── */
+.confirmBox {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.confirmHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.confirmLabel {
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.confirmLabelApprove { color: #4ade80; }
+.confirmLabelReject  { color: #f87171; }
+
+.confirmCancel {
+  background: none;
+  border: none;
+  color: #555;
+  font-size: 0.78rem;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: underline;
+}
+.confirmCancel:hover { color: #aaa; }
+
+.confirmNoteWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.confirmNoteLabel {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #666;
+  font-weight: 600;
+}
+
+.confirmNoteOptional {
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: #444;
+}
+
+.confirmNoteArea {
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  border-radius: 7px;
+  color: #e0e0e0;
+  font-family: inherit;
+  font-size: 0.88rem;
+  padding: 10px 12px;
+  resize: vertical;
+  line-height: 1.5;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+.confirmNoteArea:focus { border-color: #444; }
+
 /* ── Reviewed banner ─────────────────────────────────────────────────────── */
 .reviewedBanner {
   margin-top: 20px;
