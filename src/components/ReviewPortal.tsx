@@ -1,27 +1,19 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { upload } from "@vercel/blob/client";
 import styles from "./ReviewPortal.module.css";
+import type { Task } from "@/lib/types";
 
 const INTERNS = ["Natalie", "Sam"];
-
-const TASKS = [
-  "Q2 variance analysis vs budget",
-  "3-year revenue forecast model",
-  "Unit economics — CAC/LTV",
-  "Competitive benchmarking memo",
-  "Board deck slide — Q2 metrics",
-  "Headcount model update",
-  "SaaS gross margin benchmarks",
-  "Other / unlisted",
-];
 
 export default function ReviewPortal() {
   const [file, setFile] = useState<File | null>(null);
   const [intern, setIntern] = useState(INTERNS[0]);
   const [internEmail, setInternEmail] = useState("");
-  const [task, setTask] = useState(TASKS[0]);
+  const [taskId, setTaskId] = useState<string>("");
+  const [taskTitle, setTaskTitle] = useState("");
+  const [availableTasks, setAvailableTasks] = useState<Task[]>([]);
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState("");
@@ -30,6 +22,40 @@ export default function ReviewPortal() {
   const [error, setError] = useState("");
   const [over, setOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // Load tasks for the selected intern
+  useEffect(() => {
+    fetch("/api/tasks")
+      .then(r => r.json())
+      .then(data => {
+        const tasks: Task[] = data.tasks ?? [];
+        setAvailableTasks(tasks);
+        // Auto-select first task for this intern
+        const myTasks = tasks.filter(t => t.assignedTo === intern);
+        if (myTasks.length > 0) {
+          setTaskId(myTasks[0].id);
+          setTaskTitle(myTasks[0].title);
+        } else {
+          setTaskId("");
+          setTaskTitle("Other / unlisted");
+        }
+      })
+      .catch(() => {});
+  }, [intern]);
+
+  const internTasks = availableTasks.filter(t => t.assignedTo === intern);
+
+  const handleTaskChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val === "__other__") {
+      setTaskId("");
+      setTaskTitle("Other / unlisted");
+    } else {
+      const found = availableTasks.find(t => t.id === val);
+      setTaskId(val);
+      setTaskTitle(found?.title ?? "");
+    }
+  };
 
   const handleFile = (f: File) => {
     setFile(f);
@@ -69,7 +95,8 @@ export default function ReviewPortal() {
       formData.append("fileName", file.name);
       formData.append("intern", intern);
       formData.append("internEmail", internEmail.trim());
-      formData.append("task", task);
+      formData.append("task", taskTitle || "Other / unlisted");
+      if (taskId) formData.append("taskId", taskId);
       formData.append("notes", notes);
 
       const res = await fetch("/api/review", { method: "POST", body: formData });
@@ -182,8 +209,15 @@ export default function ReviewPortal() {
         </div>
         <div className={styles.fieldGroup}>
           <label htmlFor="task-select">Task / deliverable</label>
-          <select id="task-select" value={task} onChange={(e) => setTask(e.target.value)}>
-            {TASKS.map((t) => <option key={t}>{t}</option>)}
+          <select
+            id="task-select"
+            value={taskId || "__other__"}
+            onChange={handleTaskChange}
+          >
+            {internTasks.map((t) => (
+              <option key={t.id} value={t.id}>{t.title}</option>
+            ))}
+            <option value="__other__">Other / unlisted</option>
           </select>
         </div>
         <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
