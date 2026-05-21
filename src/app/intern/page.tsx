@@ -59,6 +59,7 @@ export default function InternPage() {
   const [dataLoading, setDataLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState<"tasks" | "weekly">("tasks");
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
 
   // Restore session on load
   useEffect(() => {
@@ -210,7 +211,7 @@ export default function InternPage() {
           <p className={styles.sub}>Strategic Finance · Summer 2026</p>
         </div>
         <div className={styles.topbarRight}>
-          <a href="/" className={styles.submitLink}>Submit deliverable →</a>
+          <a href="/" target="_blank" rel="noopener noreferrer" className={styles.submitLink}>Submit deliverable →</a>
           <button className={styles.switchBtn} onClick={handleSignOut}>Sign out</button>
         </div>
       </div>
@@ -283,17 +284,38 @@ export default function InternPage() {
                     <div className={styles.taskList}>
                       {sortedTasks.map(task => {
                         const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "complete";
+                        const isExpanded = expandedTaskId === task.id;
+
+                        // All reviewed submissions for this task, newest first
+                        const taskSubs = submissions
+                          .filter(s => s.taskId === task.id || s.task === task.title)
+                          .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+                        const reviewedSubs = taskSubs.filter(s => s.status !== "pending");
+                        const latestReview = reviewedSubs[0] ?? null;
+                        const hasFeedback = latestReview !== null;
+
                         return (
                           <div
                             key={task.id}
-                            className={`${styles.taskCard} ${task.status === "complete" ? styles.taskDone : ""}`}
+                            className={`${styles.taskCard} ${task.status === "complete" ? styles.taskDone : ""} ${isExpanded ? styles.taskCardExpanded : ""}`}
                           >
+                            {/* Card header row — always visible */}
                             <div className={styles.taskCardTop}>
                               <span className={`${styles.statusBadge} ${statusClass(task.status)}`}>
                                 {STATUS_LABELS[task.status]}
                               </span>
                               {isOverdue && <span className={styles.overdueBadge}>Overdue</span>}
+                              {hasFeedback && (
+                                <button
+                                  className={styles.expandBtn}
+                                  onClick={() => setExpandedTaskId(isExpanded ? null : task.id)}
+                                  aria-label={isExpanded ? "Collapse feedback" : "View feedback"}
+                                >
+                                  {isExpanded ? "Hide feedback ▲" : "View feedback ▼"}
+                                </button>
+                              )}
                             </div>
+
                             <div className={styles.taskTitle}>{task.title}</div>
                             {task.description && (
                               <div className={styles.taskDesc}>{task.description}</div>
@@ -304,14 +326,91 @@ export default function InternPage() {
                                   Due {new Date(task.dueDate + "T00:00:00").toLocaleDateString()}
                                 </span>
                               )}
-                              {task.submissionIds.length > 0 && (
+                              {taskSubs.length > 0 && (
                                 <span className={styles.taskSubs}>
-                                  {task.submissionIds.length} submission{task.submissionIds.length !== 1 ? "s" : ""}
+                                  {taskSubs.length} submission{taskSubs.length !== 1 ? "s" : ""}
+                                  {reviewedSubs.length > 0 && ` · ${reviewedSubs.length} reviewed`}
                                 </span>
                               )}
                             </div>
+
                             {(task.status === "needs_revision" || task.status === "todo" || task.status === "in_progress") && (
-                              <a href="/" className={styles.submitTaskLink}>Submit deliverable →</a>
+                              <a href="/" target="_blank" rel="noopener noreferrer" className={styles.submitTaskLink}>
+                                Submit deliverable →
+                              </a>
+                            )}
+
+                            {/* ── Expanded feedback panel ── */}
+                            {isExpanded && latestReview && (
+                              <div className={styles.feedbackPanel}>
+                                <div className={styles.feedbackPanelDivider} />
+
+                                {/* Header: grade + verdict + date */}
+                                <div className={styles.feedbackPanelHeader}>
+                                  <div className={styles.feedbackPanelGradeWrap}>
+                                    <span className={`${styles.feedbackPanelGrade} ${latestReview.status === "approved" ? styles.gradeApproved : styles.gradeRejected}`}>
+                                      {latestReview.review.grade}
+                                    </span>
+                                    <div>
+                                      <div className={styles.feedbackPanelVerdict}>{latestReview.review.verdict}</div>
+                                      <div className={styles.feedbackPanelDate}>
+                                        Reviewed {new Date(latestReview.reviewedAt ?? latestReview.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                        {reviewedSubs.length > 1 && ` · submission ${reviewedSubs.length} of ${taskSubs.length}`}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className={`${styles.pill} ${latestReview.status === "approved" ? styles.pillApproved : styles.pillRejected}`}>
+                                    {latestReview.status}
+                                  </span>
+                                </div>
+
+                                {/* Summary */}
+                                {latestReview.review.summary && (
+                                  <p className={styles.feedbackPanelSummary}>{latestReview.review.summary}</p>
+                                )}
+
+                                {/* Flags */}
+                                {latestReview.review.flags.length > 0 && (
+                                  <div className={styles.feedbackPanelSection}>
+                                    <div className={styles.feedbackPanelSectionTitle}>Issues flagged</div>
+                                    {latestReview.review.flags.map((flag, i) => (
+                                      <div key={i} className={`${styles.flagRow} ${styles[`flag_${flag.severity}`]}`}>
+                                        <span className={styles.flagSev}>{flag.severity}</span>
+                                        <span className={styles.flagText}>{flag.text}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Strengths */}
+                                {latestReview.review.strengths.length > 0 && (
+                                  <div className={styles.feedbackPanelSection}>
+                                    <div className={styles.feedbackPanelSectionTitle}>Strengths</div>
+                                    {latestReview.review.strengths.map((s, i) => (
+                                      <div key={i} className={styles.strengthRow}>✓ {s}</div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Action items */}
+                                {latestReview.review.action_items.length > 0 && (
+                                  <div className={styles.feedbackPanelSection}>
+                                    <div className={styles.feedbackPanelSectionTitle}>
+                                      {latestReview.status === "approved" ? "Suggestions" : "To fix before resubmitting"}
+                                    </div>
+                                    {latestReview.review.action_items.map((a, i) => (
+                                      <div key={i} className={styles.actionRow}>→ {a}</div>
+                                    ))}
+                                  </div>
+                                )}
+
+                                {/* Manager notes */}
+                                {latestReview.managerNotes && (
+                                  <div className={styles.managerNote}>
+                                    <span className={styles.managerNoteLabel}>From your manager:</span> {latestReview.managerNotes}
+                                  </div>
+                                )}
+                              </div>
                             )}
                           </div>
                         );
@@ -362,7 +461,7 @@ export default function InternPage() {
                               )}
                             </>
                           )}
-                          <a href="/" className={styles.submitTaskLink}>Resubmit →</a>
+                          <a href="/" target="_blank" rel="noopener noreferrer" className={styles.submitTaskLink}>Resubmit →</a>
                         </div>
                       );
                     })}
