@@ -655,12 +655,13 @@ export default function ManagerPage() {
                           >
                             {SEVERITIES.map((s) => <option key={s}>{s}</option>)}
                           </select>
-                          <input
-                            className={styles.fieldInput}
+                          <textarea
+                            className={`${styles.fieldTextarea} ${styles.inlineTextarea}`}
                             value={f.text}
                             onChange={(e) => updateFlag(i, "text", e.target.value)}
                             disabled={!editable}
                             placeholder="Describe the issue…"
+                            rows={2}
                           />
                           {editable && (
                             <button className={styles.removeBtn} onClick={() => removeFlag(i)}>×</button>
@@ -679,12 +680,13 @@ export default function ManagerPage() {
                     <div className={styles.editList}>
                       {selected.review.strengths.map((s, i) => (
                         <div key={i} className={styles.listRow}>
-                          <input
-                            className={styles.fieldInput}
+                          <textarea
+                            className={`${styles.fieldTextarea} ${styles.inlineTextarea}`}
                             value={s}
                             onChange={(e) => updateListItem("strengths", i, e.target.value)}
                             disabled={!editable}
                             placeholder="Strength…"
+                            rows={2}
                           />
                           {editable && (
                             <button className={styles.removeBtn} onClick={() => removeListItem("strengths", i)}>×</button>
@@ -703,12 +705,13 @@ export default function ManagerPage() {
                     <div className={styles.editList}>
                       {selected.review.action_items.map((a, i) => (
                         <div key={i} className={styles.listRow}>
-                          <input
-                            className={styles.fieldInput}
+                          <textarea
+                            className={`${styles.fieldTextarea} ${styles.inlineTextarea}`}
                             value={a}
                             onChange={(e) => updateListItem("action_items", i, e.target.value)}
                             disabled={!editable}
                             placeholder="Action item…"
+                            rows={2}
                           />
                           {editable && (
                             <button className={styles.removeBtn} onClick={() => removeListItem("action_items", i)}>×</button>
