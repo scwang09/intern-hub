@@ -526,6 +526,31 @@
   border-color: var(--accent);
 }
 
+.fieldGroup input[type="text"] {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  color: var(--accent);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 8px 10px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.fieldGroup input[type="text"]:focus {
+  border-color: var(--accent);
+}
+
+.optionalLabel {
+  font-size: 10px;
+  color: var(--muted);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
 /* ── Responsive ── */
 @media (max-width: 600px) {
   .shell { padding: 24px 16px; }
