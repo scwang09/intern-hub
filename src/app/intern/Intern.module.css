@@ -560,6 +560,63 @@
   gap: 20px;
 }
 
+.weeklyHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #1a1a1a;
+  margin-bottom: 4px;
+}
+
+.weeklyDateLabel {
+  font-size: 0.68rem;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+}
+
+.weeklyStats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.weeklyStat {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 10px;
+  padding: 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.weeklyStatAlert {
+  background: #150a0a;
+  border-color: #2a1010;
+}
+
+.weeklyStatNum {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #e0e0e0;
+  line-height: 1;
+}
+
+.weeklyStatAlert .weeklyStatNum {
+  color: #e05252;
+}
+
+.weeklyStatLabel {
+  font-size: 0.68rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 500;
+}
+
 .weeklySection {
   display: flex;
   flex-direction: column;
