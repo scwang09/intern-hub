@@ -14,6 +14,7 @@ export default function ReviewPortal() {
   const [taskId, setTaskId] = useState<string>("");
   const [taskTitle, setTaskTitle] = useState("");
   const [availableTasks, setAvailableTasks] = useState<Task[]>([]);
+  const [submissionName, setSubmissionName] = useState("");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [statusMsg, setStatusMsg] = useState("");
@@ -97,6 +98,7 @@ export default function ReviewPortal() {
       formData.append("internEmail", internEmail.trim());
       formData.append("task", taskTitle || "Other / unlisted");
       if (taskId) formData.append("taskId", taskId);
+      if (submissionName.trim()) formData.append("submissionName", submissionName.trim());
       formData.append("notes", notes);
 
       const res = await fetch("/api/review", { method: "POST", body: formData });
@@ -119,6 +121,7 @@ export default function ReviewPortal() {
     setSubmitted(false);
     setError("");
     setNotes("");
+    setSubmissionName("");
     if (fileRef.current) fileRef.current.value = "";
   };
 
@@ -219,6 +222,16 @@ export default function ReviewPortal() {
             ))}
             <option value="__other__">Other / unlisted</option>
           </select>
+        </div>
+        <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+          <label htmlFor="submission-name-input">Submission name <span className={styles.optionalLabel}>(optional)</span></label>
+          <input
+            id="submission-name-input"
+            type="text"
+            placeholder="e.g. Q2 Variance Analysis – Draft 2"
+            value={submissionName}
+            onChange={(e) => setSubmissionName(e.target.value)}
+          />
         </div>
         <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
           <label htmlFor="notes-input">Notes for the reviewer (optional)</label>
