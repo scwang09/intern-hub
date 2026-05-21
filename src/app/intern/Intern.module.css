@@ -435,6 +435,12 @@
   margin: 2px 0;
 }
 
+.feedbackSubDivider {
+  height: 1px;
+  background: #222;
+  margin: 18px 0;
+}
+
 .feedbackPanelHeader {
   display: flex;
   align-items: flex-start;
