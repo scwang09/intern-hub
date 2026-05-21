@@ -530,11 +530,12 @@
   font-family: var(--font-sans);
   font-size: 14px;
   color: var(--accent);
-  background: transparent;
+  background: var(--white);
   border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 8px 10px;
+  border-radius: 3px;
+  padding: 10px 12px;
   outline: none;
+  transition: border-color 0.15s;
   width: 100%;
   box-sizing: border-box;
 }
