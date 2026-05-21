@@ -22,6 +22,7 @@ export interface Submission {
   internEmail: string;
   task: string;
   taskId?: string;
+  submissionName?: string;
   fileName: string;
   fileUrl?: string;
   review: ReviewResult;
