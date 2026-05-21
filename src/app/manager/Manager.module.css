@@ -682,6 +682,12 @@
 
 .fieldTextarea { resize: vertical; }
 
+.inlineTextarea {
+  resize: vertical;
+  min-height: unset;
+  line-height: 1.45;
+}
+
 .fieldSelect:disabled,
 .fieldTextarea:disabled,
 .fieldInput:disabled { opacity: 0.5; cursor: not-allowed; }
