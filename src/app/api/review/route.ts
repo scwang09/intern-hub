@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
     const internEmail = formData.get("internEmail") as string;
     const task = formData.get("task") as string;
     const taskId = (formData.get("taskId") as string) || undefined;
+    const submissionName = (formData.get("submissionName") as string) || undefined;
     const notes = formData.get("notes") as string;
 
     if (!fileUrl || !fileName) {
@@ -117,6 +118,7 @@ export async function POST(req: NextRequest) {
         `Intern: ${intern}`,
         `Task: ${task}`,
         taskDescription ? `Task description: ${taskDescription}` : "",
+        submissionName ? `Submission name: ${submissionName}` : "",
         `File: ${fileName}`,
         notes ? `Intern notes: ${notes}` : "",
         "",
@@ -151,6 +153,7 @@ export async function POST(req: NextRequest) {
       internEmail,
       task,
       taskId,
+      submissionName,
       fileName,
       fileUrl, // already in Blob — reuse the URL
       review,
