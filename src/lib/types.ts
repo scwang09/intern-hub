@@ -21,6 +21,7 @@ export interface Submission {
   intern: string;
   internEmail: string;
   task: string;
+  taskId?: string;
   fileName: string;
   fileUrl?: string;
   review: ReviewResult;
@@ -28,4 +29,19 @@ export interface Submission {
   managerNotes: string;
   submittedAt: string;
   reviewedAt?: string;
+}
+
+export type TaskStatus = "todo" | "in_progress" | "under_review" | "needs_revision" | "complete";
+
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  assignedTo: string;
+  status: TaskStatus;
+  dueDate?: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  submissionIds: string[];
 }
