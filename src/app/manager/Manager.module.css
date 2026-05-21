@@ -507,7 +507,8 @@
 }
 
 .subName { font-size: 0.85rem; font-weight: 500; color: #ddd; }
-.subTask { font-size: 0.75rem; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.subSubmissionName { font-size: 0.8rem; color: #aaa; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.subTask { font-size: 0.72rem; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .subDate { font-size: 0.7rem; color: #444; }
 
 .pill {
