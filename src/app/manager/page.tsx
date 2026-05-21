@@ -373,7 +373,7 @@ export default function ManagerPage() {
                       onClick={() => { setTab("submissions"); handleSelect(sub); }}
                     >
                       <span className={styles.pendingName}>{sub.intern}</span>
-                      <span className={styles.pendingTask}>{sub.task}</span>
+                      <span className={styles.pendingTask}>{sub.submissionName || sub.task}</span>
                       <span className={`${styles.pill} ${styles.pillPending}`}>pending</span>
                       <span className={styles.pendingDate}>{new Date(sub.submittedAt).toLocaleDateString()}</span>
                     </button>
@@ -509,6 +509,9 @@ export default function ManagerPage() {
                         <span className={styles.subName}>{sub.intern}</span>
                         <span className={`${styles.pill} ${styles.pillPending}`}>pending</span>
                       </div>
+                      {sub.submissionName && (
+                        <span className={styles.subSubmissionName}>{sub.submissionName}</span>
+                      )}
                       <span className={styles.subTask}>{sub.task}</span>
                       <span className={styles.subDate}>{new Date(sub.submittedAt).toLocaleDateString()}</span>
                     </button>
@@ -530,6 +533,9 @@ export default function ManagerPage() {
                           {sub.status}
                         </span>
                       </div>
+                      {sub.submissionName && (
+                        <span className={styles.subSubmissionName}>{sub.submissionName}</span>
+                      )}
                       <span className={styles.subTask}>{sub.task}</span>
                       <span className={styles.subDate}>{new Date(sub.submittedAt).toLocaleDateString()}</span>
                     </button>
@@ -592,10 +598,10 @@ export default function ManagerPage() {
                   <div className={styles.detailHeader}>
                     <div>
                       <p className={styles.detailMeta}>
-                        {selected.intern} · {selected.internEmail}
+                        {selected.intern} · {selected.internEmail} · {selected.task}
                       </p>
                       <h2 className={styles.detailTitle}>
-                        {selected.review.title || selected.task}
+                        {selected.submissionName || selected.review.title || selected.task}
                       </h2>
                     </div>
                     <button className={styles.btnDelete} onClick={handleDelete} title="Delete submission">
