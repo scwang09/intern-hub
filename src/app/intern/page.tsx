@@ -152,17 +152,10 @@ export default function InternPage() {
 
   // Submissions that don't belong to any known task (Other/unlisted or intern-created)
   const knownTaskIds = new Set(tasks.map(t => t.id));
-  const orphanedSubs = submissions.filter(s => !s.taskId || !knownTaskIds.has(s.taskId));
-  // Group by task title, newest-first within each group
-  const orphanedGroups: Record<string, Submission[]> = {};
-  for (const s of orphanedSubs) {
-    const key = s.task || "Other / unlisted";
-    if (!orphanedGroups[key]) orphanedGroups[key] = [];
-    orphanedGroups[key].push(s);
-  }
-  for (const key of Object.keys(orphanedGroups)) {
-    orphanedGroups[key].sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
-  }
+  // Each orphaned submission gets its own card — no grouping
+  const orphanedSubs = submissions
+    .filter(s => !s.taskId || !knownTaskIds.has(s.taskId))
+    .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
 
   // ── Pick name ──────────────────────────────────────────────────────────────
   if (step === "pick") {
@@ -257,7 +250,7 @@ export default function InternPage() {
             {/* ── TASKS TAB ── */}
             {activeTab === "tasks" && (
               <>
-                {tasks.length === 0 && Object.keys(orphanedGroups).length === 0 ? (
+                {tasks.length === 0 && orphanedSubs.length === 0 ? (
                   <div className={styles.emptyState}>
                     <p>No tasks or submissions yet.</p>
                     <p className={styles.emptySub}>Check back once your manager adds your tasks.</p>
@@ -307,8 +300,7 @@ export default function InternPage() {
                           .filter(s => s.taskId === task.id || s.task === task.title)
                           .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
                         const reviewedSubs = taskSubs.filter(s => s.status !== "pending");
-                        const latestReview = reviewedSubs[0] ?? null;
-                        const hasFeedback = latestReview !== null;
+                        const hasFeedback = reviewedSubs.length > 0;
 
                         return (
                           <div
@@ -357,97 +349,99 @@ export default function InternPage() {
                             )}
 
                             {/* ── Expanded feedback panel ── */}
-                            {isExpanded && latestReview && (
+                            {isExpanded && reviewedSubs.length > 0 && (
                               <div className={styles.feedbackPanel}>
                                 <div className={styles.feedbackPanelDivider} />
+                                {reviewedSubs.map((rev, idx) => (
+                                  <div key={rev.id}>
+                                    {idx > 0 && <div className={styles.feedbackSubDivider} />}
 
-                                {/* Header: grade + verdict + date */}
-                                <div className={styles.feedbackPanelHeader}>
-                                  <div className={styles.feedbackPanelGradeWrap}>
-                                    <span className={`${styles.feedbackPanelGrade} ${latestReview.status === "approved" ? styles.gradeApproved : styles.gradeRejected}`}>
-                                      {latestReview.review.grade}
-                                    </span>
-                                    <div>
-                                      {latestReview.submissionName && (
-                                        <div className={styles.feedbackPanelSubName}>{latestReview.submissionName}</div>
-                                      )}
-                                      <div className={styles.feedbackPanelVerdict}>{latestReview.review.verdict}</div>
-                                      <div className={styles.feedbackPanelDate}>
-                                        Reviewed {new Date(latestReview.reviewedAt ?? latestReview.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                                        {reviewedSubs.length > 1 && ` · submission ${reviewedSubs.length} of ${taskSubs.length}`}
+                                    {/* Header: grade + verdict + date */}
+                                    <div className={styles.feedbackPanelHeader}>
+                                      <div className={styles.feedbackPanelGradeWrap}>
+                                        <span className={`${styles.feedbackPanelGrade} ${rev.status === "approved" ? styles.gradeApproved : styles.gradeRejected}`}>
+                                          {rev.review.grade}
+                                        </span>
+                                        <div>
+                                          {rev.submissionName && (
+                                            <div className={styles.feedbackPanelSubName}>{rev.submissionName}</div>
+                                          )}
+                                          <div className={styles.feedbackPanelVerdict}>{rev.review.verdict}</div>
+                                          <div className={styles.feedbackPanelDate}>
+                                            Reviewed {new Date(rev.reviewedAt ?? rev.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                            {reviewedSubs.length > 1 && ` · submission ${reviewedSubs.length - idx} of ${taskSubs.length}`}
+                                          </div>
+                                        </div>
                                       </div>
+                                      <span className={`${styles.pill} ${rev.status === "approved" ? styles.pillApproved : styles.pillRejected}`}>
+                                        {rev.status}
+                                      </span>
                                     </div>
-                                  </div>
-                                  <span className={`${styles.pill} ${latestReview.status === "approved" ? styles.pillApproved : styles.pillRejected}`}>
-                                    {latestReview.status}
-                                  </span>
-                                </div>
 
-                                {/* Summary */}
-                                {latestReview.review.summary && (
-                                  <p className={styles.feedbackPanelSummary}>{latestReview.review.summary}</p>
-                                )}
+                                    {/* Summary */}
+                                    {rev.review.summary && (
+                                      <p className={styles.feedbackPanelSummary}>{rev.review.summary}</p>
+                                    )}
 
-                                {/* Flags */}
-                                {latestReview.review.flags.length > 0 && (
-                                  <div className={styles.feedbackPanelSection}>
-                                    <div className={styles.feedbackPanelSectionTitle}>Issues flagged</div>
-                                    {latestReview.review.flags.map((flag, i) => (
-                                      <div key={i} className={`${styles.flagRow} ${styles[`flag_${flag.severity}`]}`}>
-                                        <span className={styles.flagSev}>{flag.severity}</span>
-                                        <span className={styles.flagText}>{flag.text}</span>
+                                    {/* Flags */}
+                                    {rev.review.flags.length > 0 && (
+                                      <div className={styles.feedbackPanelSection}>
+                                        <div className={styles.feedbackPanelSectionTitle}>Issues flagged</div>
+                                        {rev.review.flags.map((flag, i) => (
+                                          <div key={i} className={`${styles.flagRow} ${styles[`flag_${flag.severity}`]}`}>
+                                            <span className={styles.flagSev}>{flag.severity}</span>
+                                            <span className={styles.flagText}>{flag.text}</span>
+                                          </div>
+                                        ))}
                                       </div>
-                                    ))}
-                                  </div>
-                                )}
+                                    )}
 
-                                {/* Strengths */}
-                                {latestReview.review.strengths.length > 0 && (
-                                  <div className={styles.feedbackPanelSection}>
-                                    <div className={styles.feedbackPanelSectionTitle}>Strengths</div>
-                                    {latestReview.review.strengths.map((s, i) => (
-                                      <div key={i} className={styles.strengthRow}>✓ {s}</div>
-                                    ))}
-                                  </div>
-                                )}
+                                    {/* Strengths */}
+                                    {rev.review.strengths.length > 0 && (
+                                      <div className={styles.feedbackPanelSection}>
+                                        <div className={styles.feedbackPanelSectionTitle}>Strengths</div>
+                                        {rev.review.strengths.map((s, i) => (
+                                          <div key={i} className={styles.strengthRow}>✓ {s}</div>
+                                        ))}
+                                      </div>
+                                    )}
 
-                                {/* Action items */}
-                                {latestReview.review.action_items.length > 0 && (
-                                  <div className={styles.feedbackPanelSection}>
-                                    <div className={styles.feedbackPanelSectionTitle}>
-                                      {latestReview.status === "approved" ? "Suggestions" : "To fix before resubmitting"}
-                                    </div>
-                                    {latestReview.review.action_items.map((a, i) => (
-                                      <div key={i} className={styles.actionRow}>→ {a}</div>
-                                    ))}
-                                  </div>
-                                )}
+                                    {/* Action items */}
+                                    {rev.review.action_items.length > 0 && (
+                                      <div className={styles.feedbackPanelSection}>
+                                        <div className={styles.feedbackPanelSectionTitle}>
+                                          {rev.status === "approved" ? "Suggestions" : "To fix before resubmitting"}
+                                        </div>
+                                        {rev.review.action_items.map((a, i) => (
+                                          <div key={i} className={styles.actionRow}>→ {a}</div>
+                                        ))}
+                                      </div>
+                                    )}
 
-                                {/* Manager notes */}
-                                {latestReview.managerNotes && (
-                                  <div className={styles.managerNote}>
-                                    <span className={styles.managerNoteLabel}>From your manager:</span> {latestReview.managerNotes}
+                                    {/* Manager notes */}
+                                    {rev.managerNotes && (
+                                      <div className={styles.managerNote}>
+                                        <span className={styles.managerNoteLabel}>From your manager:</span> {rev.managerNotes}
+                                      </div>
+                                    )}
                                   </div>
-                                )}
+                                ))}
                               </div>
                             )}
                           </div>
                         );
                       })}
 
-                      {/* Orphaned submissions (Other/unlisted or intern-created) */}
-                      {Object.entries(orphanedGroups).map(([title, subs]) => {
-                        const expandKey = `orphan:${title}`;
+                      {/* Orphaned submissions — each is its own card */}
+                      {orphanedSubs.map(sub => {
+                        const expandKey = `orphan:${sub.id}`;
                         const isExpanded = expandedTaskId === expandKey;
-                        const reviewedSubs = subs.filter(s => s.status !== "pending");
-                        const latestReview = reviewedSubs[0] ?? null;
-                        const hasFeedback = latestReview !== null;
-                        const latestStatus = subs[0]?.status;
+                        const hasFeedback = sub.status !== "pending";
                         return (
-                          <div key={expandKey} className={`${styles.taskCard} ${isExpanded ? styles.taskCardExpanded : ""}`}>
+                          <div key={sub.id} className={`${styles.taskCard} ${isExpanded ? styles.taskCardExpanded : ""}`}>
                             <div className={styles.taskCardTop}>
-                              <span className={`${styles.statusBadge} ${latestStatus === "approved" ? styles.statusComplete : latestStatus === "rejected" ? styles.statusNeedsRevision : styles.statusUnderReview}`}>
-                                {latestStatus === "approved" ? "Approved" : latestStatus === "rejected" ? "Needs revision" : "Under review"}
+                              <span className={`${styles.statusBadge} ${sub.status === "approved" ? styles.statusComplete : sub.status === "rejected" ? styles.statusNeedsRevision : styles.statusUnderReview}`}>
+                                {sub.status === "approved" ? "Approved" : sub.status === "rejected" ? "Needs revision" : "Under review"}
                               </span>
                               <span className={styles.orphanLabel}>unlisted</span>
                               {hasFeedback && (
@@ -460,47 +454,46 @@ export default function InternPage() {
                               )}
                             </div>
 
-                            <div className={styles.taskTitle}>{title}</div>
+                            {/* Submission name (if set) or task title */}
+                            <div className={styles.taskTitle}>
+                              {sub.submissionName || sub.task || "Unlisted submission"}
+                            </div>
+                            {sub.submissionName && sub.task && (
+                              <div className={styles.taskDesc}>{sub.task}</div>
+                            )}
                             <div className={styles.taskMeta}>
-                              <span className={styles.taskSubs}>
-                                {subs.length} submission{subs.length !== 1 ? "s" : ""}
-                                {reviewedSubs.length > 0 && ` · ${reviewedSubs.length} reviewed`}
-                              </span>
                               <span className={styles.taskDue}>
-                                Last submitted {new Date(subs[0].submittedAt).toLocaleDateString()}
+                                Submitted {new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                               </span>
                             </div>
 
-                            {isExpanded && latestReview && (
+                            {/* Expanded feedback panel */}
+                            {isExpanded && hasFeedback && (
                               <div className={styles.feedbackPanel}>
                                 <div className={styles.feedbackPanelDivider} />
                                 <div className={styles.feedbackPanelHeader}>
                                   <div className={styles.feedbackPanelGradeWrap}>
-                                    <span className={`${styles.feedbackPanelGrade} ${latestReview.status === "approved" ? styles.gradeApproved : styles.gradeRejected}`}>
-                                      {latestReview.review.grade}
+                                    <span className={`${styles.feedbackPanelGrade} ${sub.status === "approved" ? styles.gradeApproved : styles.gradeRejected}`}>
+                                      {sub.review.grade}
                                     </span>
                                     <div>
-                                      {latestReview.submissionName && (
-                                        <div className={styles.feedbackPanelSubName}>{latestReview.submissionName}</div>
-                                      )}
-                                      <div className={styles.feedbackPanelVerdict}>{latestReview.review.verdict}</div>
+                                      <div className={styles.feedbackPanelVerdict}>{sub.review.verdict}</div>
                                       <div className={styles.feedbackPanelDate}>
-                                        Reviewed {new Date(latestReview.reviewedAt ?? latestReview.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
-                                        {reviewedSubs.length > 1 && ` · submission ${reviewedSubs.length} of ${subs.length}`}
+                                        Reviewed {new Date(sub.reviewedAt ?? sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
                                       </div>
                                     </div>
                                   </div>
-                                  <span className={`${styles.pill} ${latestReview.status === "approved" ? styles.pillApproved : styles.pillRejected}`}>
-                                    {latestReview.status}
+                                  <span className={`${styles.pill} ${sub.status === "approved" ? styles.pillApproved : styles.pillRejected}`}>
+                                    {sub.status}
                                   </span>
                                 </div>
-                                {latestReview.review.summary && (
-                                  <p className={styles.feedbackPanelSummary}>{latestReview.review.summary}</p>
+                                {sub.review.summary && (
+                                  <p className={styles.feedbackPanelSummary}>{sub.review.summary}</p>
                                 )}
-                                {latestReview.review.flags.length > 0 && (
+                                {sub.review.flags.length > 0 && (
                                   <div className={styles.feedbackPanelSection}>
                                     <div className={styles.feedbackPanelSectionTitle}>Issues flagged</div>
-                                    {latestReview.review.flags.map((flag, i) => (
+                                    {sub.review.flags.map((flag, i) => (
                                       <div key={i} className={`${styles.flagRow} ${styles[`flag_${flag.severity}`]}`}>
                                         <span className={styles.flagSev}>{flag.severity}</span>
                                         <span className={styles.flagText}>{flag.text}</span>
@@ -508,27 +501,27 @@ export default function InternPage() {
                                     ))}
                                   </div>
                                 )}
-                                {latestReview.review.strengths.length > 0 && (
+                                {sub.review.strengths.length > 0 && (
                                   <div className={styles.feedbackPanelSection}>
                                     <div className={styles.feedbackPanelSectionTitle}>Strengths</div>
-                                    {latestReview.review.strengths.map((s, i) => (
+                                    {sub.review.strengths.map((s, i) => (
                                       <div key={i} className={styles.strengthRow}>✓ {s}</div>
                                     ))}
                                   </div>
                                 )}
-                                {latestReview.review.action_items.length > 0 && (
+                                {sub.review.action_items.length > 0 && (
                                   <div className={styles.feedbackPanelSection}>
                                     <div className={styles.feedbackPanelSectionTitle}>
-                                      {latestReview.status === "approved" ? "Suggestions" : "To fix before resubmitting"}
+                                      {sub.status === "approved" ? "Suggestions" : "To fix before resubmitting"}
                                     </div>
-                                    {latestReview.review.action_items.map((a, i) => (
+                                    {sub.review.action_items.map((a, i) => (
                                       <div key={i} className={styles.actionRow}>→ {a}</div>
                                     ))}
                                   </div>
                                 )}
-                                {latestReview.managerNotes && (
+                                {sub.managerNotes && (
                                   <div className={styles.managerNote}>
-                                    <span className={styles.managerNoteLabel}>From your manager:</span> {latestReview.managerNotes}
+                                    <span className={styles.managerNoteLabel}>From your manager:</span> {sub.managerNotes}
                                   </div>
                                 )}
                               </div>
