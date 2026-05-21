@@ -257,42 +257,44 @@ export default function InternPage() {
             {/* ── TASKS TAB ── */}
             {activeTab === "tasks" && (
               <>
-                {tasks.length === 0 ? (
+                {tasks.length === 0 && Object.keys(orphanedGroups).length === 0 ? (
                   <div className={styles.emptyState}>
-                    <p>No tasks assigned yet.</p>
+                    <p>No tasks or submissions yet.</p>
                     <p className={styles.emptySub}>Check back once your manager adds your tasks.</p>
                   </div>
                 ) : (
                   <>
-                    {/* Summary row */}
-                    <div className={styles.summaryRow}>
-                      <div className={styles.summaryCard}>
-                        <span className={styles.summaryNum}>{tasks.length}</span>
-                        <span className={styles.summaryLabel}>Total</span>
-                      </div>
-                      <div className={styles.summaryCard}>
-                        <span className={styles.summaryNum}>{activeTasks.length}</span>
-                        <span className={styles.summaryLabel}>Active</span>
-                      </div>
-                      <div className={styles.summaryCard}>
-                        <span className={styles.summaryNum}>{doneTasks.length}</span>
-                        <span className={styles.summaryLabel}>Done</span>
-                      </div>
-                      {overdueTasks.length > 0 && (
-                        <div className={styles.summaryCard}>
-                          <span className={`${styles.summaryNum} ${styles.summaryAlert}`}>{overdueTasks.length}</span>
-                          <span className={styles.summaryLabel}>Overdue</span>
+                    {/* Summary + progress — only shown when there are tracked tasks */}
+                    {tasks.length > 0 && (
+                      <>
+                        <div className={styles.summaryRow}>
+                          <div className={styles.summaryCard}>
+                            <span className={styles.summaryNum}>{tasks.length}</span>
+                            <span className={styles.summaryLabel}>Total</span>
+                          </div>
+                          <div className={styles.summaryCard}>
+                            <span className={styles.summaryNum}>{activeTasks.length}</span>
+                            <span className={styles.summaryLabel}>Active</span>
+                          </div>
+                          <div className={styles.summaryCard}>
+                            <span className={styles.summaryNum}>{doneTasks.length}</span>
+                            <span className={styles.summaryLabel}>Done</span>
+                          </div>
+                          {overdueTasks.length > 0 && (
+                            <div className={styles.summaryCard}>
+                              <span className={`${styles.summaryNum} ${styles.summaryAlert}`}>{overdueTasks.length}</span>
+                              <span className={styles.summaryLabel}>Overdue</span>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-
-                    {/* Progress */}
-                    <div className={styles.progressWrap}>
-                      <div className={styles.progressBar}>
-                        <div className={styles.progressFill} style={{ width: `${pct}%` }} />
-                      </div>
-                      <span className={styles.progressPct}>{pct}% complete</span>
-                    </div>
+                        <div className={styles.progressWrap}>
+                          <div className={styles.progressBar}>
+                            <div className={styles.progressFill} style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className={styles.progressPct}>{pct}% complete</span>
+                        </div>
+                      </>
+                    )}
 
                     {/* Task list */}
                     <div className={styles.taskList}>
