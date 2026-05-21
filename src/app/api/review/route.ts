@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { saveSubmission } from "@/lib/db";
+import { saveSubmission, linkSubmissionToTask } from "@/lib/db";
 import { notifyManagerNewSubmission } from "@/lib/notify";
 import type { Submission, ReviewResult } from "@/lib/types";
 
@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
     const intern = formData.get("intern") as string;
     const internEmail = formData.get("internEmail") as string;
     const task = formData.get("task") as string;
+    const taskId = (formData.get("taskId") as string) || undefined;
     const notes = formData.get("notes") as string;
 
     if (!fileUrl || !fileName) {
@@ -99,6 +100,7 @@ export async function POST(req: NextRequest) {
       intern,
       internEmail,
       task,
+      taskId,
       fileName,
       fileUrl, // already in Blob — reuse the URL
       review,
@@ -108,6 +110,12 @@ export async function POST(req: NextRequest) {
     };
 
     await saveSubmission(submission);
+
+    // Link to task and flip its status to under_review
+    if (taskId) {
+      await linkSubmissionToTask(taskId, submission.id);
+    }
+
     await notifyManagerNewSubmission(submission);
 
     return NextResponse.json({ success: true, submissionId: submission.id });
