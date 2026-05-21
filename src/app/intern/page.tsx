@@ -539,6 +539,37 @@ export default function InternPage() {
             {activeTab === "weekly" && (
               <div className={styles.weeklyPane}>
 
+                {/* Week header + stats strip */}
+                <div className={styles.weeklyHeader}>
+                  <span className={styles.weeklyDateLabel}>
+                    {(() => {
+                      const now = new Date();
+                      const start = new Date(now);
+                      start.setDate(now.getDate() - 7);
+                      const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+                      return `${fmt(start)} – ${fmt(now)}`;
+                    })()}
+                  </span>
+                  <div className={styles.weeklyStats}>
+                    <div className={`${styles.weeklyStat} ${needsRevisionTasks.length > 0 ? styles.weeklyStatAlert : ""}`}>
+                      <span className={styles.weeklyStatNum}>{needsRevisionTasks.length}</span>
+                      <span className={styles.weeklyStatLabel}>Action required</span>
+                    </div>
+                    <div className={styles.weeklyStat}>
+                      <span className={styles.weeklyStatNum}>{dueSoonTasks.length}</span>
+                      <span className={styles.weeklyStatLabel}>Due this week</span>
+                    </div>
+                    <div className={styles.weeklyStat}>
+                      <span className={styles.weeklyStatNum}>{feedbackReceived.length}</span>
+                      <span className={styles.weeklyStatLabel}>Feedback received</span>
+                    </div>
+                    <div className={styles.weeklyStat}>
+                      <span className={styles.weeklyStatNum}>{recentSubs.length}</span>
+                      <span className={styles.weeklyStatLabel}>Submitted</span>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Needs revision — highest priority */}
                 {needsRevisionTasks.length > 0 && (
                   <div className={styles.weeklySection}>
