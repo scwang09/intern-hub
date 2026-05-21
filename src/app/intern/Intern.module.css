@@ -457,10 +457,17 @@
 .gradeApproved { color: #2ecc71; }
 .gradeRejected { color: #e05252; }
 
+.feedbackPanelSubName {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #f0f0f0;
+  margin-bottom: 2px;
+}
+
 .feedbackPanelVerdict {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 500;
-  color: #ddd;
+  color: #aaa;
 }
 
 .feedbackPanelDate {
