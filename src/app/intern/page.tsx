@@ -368,6 +368,9 @@ export default function InternPage() {
                                       {latestReview.review.grade}
                                     </span>
                                     <div>
+                                      {latestReview.submissionName && (
+                                        <div className={styles.feedbackPanelSubName}>{latestReview.submissionName}</div>
+                                      )}
                                       <div className={styles.feedbackPanelVerdict}>{latestReview.review.verdict}</div>
                                       <div className={styles.feedbackPanelDate}>
                                         Reviewed {new Date(latestReview.reviewedAt ?? latestReview.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
@@ -477,6 +480,9 @@ export default function InternPage() {
                                       {latestReview.review.grade}
                                     </span>
                                     <div>
+                                      {latestReview.submissionName && (
+                                        <div className={styles.feedbackPanelSubName}>{latestReview.submissionName}</div>
+                                      )}
                                       <div className={styles.feedbackPanelVerdict}>{latestReview.review.verdict}</div>
                                       <div className={styles.feedbackPanelDate}>
                                         Reviewed {new Date(latestReview.reviewedAt ?? latestReview.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
@@ -616,7 +622,7 @@ export default function InternPage() {
                     {feedbackReceived.map(sub => (
                       <div key={sub.id} className={styles.feedbackCard}>
                         <div className={styles.feedbackTop}>
-                          <span className={styles.feedbackTask}>{sub.task}</span>
+                          <span className={styles.feedbackTask}>{sub.submissionName || sub.task}</span>
                           <span className={`${styles.feedbackGrade} ${sub.status === "approved" ? styles.gradeApproved : styles.gradeRejected}`}>
                             {sub.review.grade}
                           </span>
@@ -653,7 +659,7 @@ export default function InternPage() {
                     </div>
                     {recentSubs.map(sub => (
                       <div key={sub.id} className={styles.subRow}>
-                        <span className={styles.subTask}>{sub.task}</span>
+                        <span className={styles.subTask}>{sub.submissionName || sub.task}</span>
                         <span className={styles.subDate}>
                           {new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                         </span>
