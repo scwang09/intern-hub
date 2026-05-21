@@ -150,6 +150,20 @@ export default function InternPage() {
   const feedbackReceived = submissions.filter(s => s.status !== "pending" && isThisWeek(s.reviewedAt ?? ""));
   const needsRevisionTasks = tasks.filter(t => t.status === "needs_revision");
 
+  // Submissions that don't belong to any known task (Other/unlisted or intern-created)
+  const knownTaskIds = new Set(tasks.map(t => t.id));
+  const orphanedSubs = submissions.filter(s => !s.taskId || !knownTaskIds.has(s.taskId));
+  // Group by task title, newest-first within each group
+  const orphanedGroups: Record<string, Submission[]> = {};
+  for (const s of orphanedSubs) {
+    const key = s.task || "Other / unlisted";
+    if (!orphanedGroups[key]) orphanedGroups[key] = [];
+    orphanedGroups[key].push(s);
+  }
+  for (const key of Object.keys(orphanedGroups)) {
+    orphanedGroups[key].sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+  }
+
   // ── Pick name ──────────────────────────────────────────────────────────────
   if (step === "pick") {
     return (
@@ -405,6 +419,105 @@ export default function InternPage() {
                                 )}
 
                                 {/* Manager notes */}
+                                {latestReview.managerNotes && (
+                                  <div className={styles.managerNote}>
+                                    <span className={styles.managerNoteLabel}>From your manager:</span> {latestReview.managerNotes}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                      {/* Orphaned submissions (Other/unlisted or intern-created) */}
+                      {Object.entries(orphanedGroups).map(([title, subs]) => {
+                        const expandKey = `orphan:${title}`;
+                        const isExpanded = expandedTaskId === expandKey;
+                        const reviewedSubs = subs.filter(s => s.status !== "pending");
+                        const latestReview = reviewedSubs[0] ?? null;
+                        const hasFeedback = latestReview !== null;
+                        const latestStatus = subs[0]?.status;
+                        return (
+                          <div key={expandKey} className={`${styles.taskCard} ${isExpanded ? styles.taskCardExpanded : ""}`}>
+                            <div className={styles.taskCardTop}>
+                              <span className={`${styles.statusBadge} ${latestStatus === "approved" ? styles.statusComplete : latestStatus === "rejected" ? styles.statusNeedsRevision : styles.statusUnderReview}`}>
+                                {latestStatus === "approved" ? "Approved" : latestStatus === "rejected" ? "Needs revision" : "Under review"}
+                              </span>
+                              <span className={styles.orphanLabel}>unlisted</span>
+                              {hasFeedback && (
+                                <button
+                                  className={styles.expandBtn}
+                                  onClick={() => setExpandedTaskId(isExpanded ? null : expandKey)}
+                                >
+                                  {isExpanded ? "Hide feedback ▲" : "View feedback ▼"}
+                                </button>
+                              )}
+                            </div>
+
+                            <div className={styles.taskTitle}>{title}</div>
+                            <div className={styles.taskMeta}>
+                              <span className={styles.taskSubs}>
+                                {subs.length} submission{subs.length !== 1 ? "s" : ""}
+                                {reviewedSubs.length > 0 && ` · ${reviewedSubs.length} reviewed`}
+                              </span>
+                              <span className={styles.taskDue}>
+                                Last submitted {new Date(subs[0].submittedAt).toLocaleDateString()}
+                              </span>
+                            </div>
+
+                            {isExpanded && latestReview && (
+                              <div className={styles.feedbackPanel}>
+                                <div className={styles.feedbackPanelDivider} />
+                                <div className={styles.feedbackPanelHeader}>
+                                  <div className={styles.feedbackPanelGradeWrap}>
+                                    <span className={`${styles.feedbackPanelGrade} ${latestReview.status === "approved" ? styles.gradeApproved : styles.gradeRejected}`}>
+                                      {latestReview.review.grade}
+                                    </span>
+                                    <div>
+                                      <div className={styles.feedbackPanelVerdict}>{latestReview.review.verdict}</div>
+                                      <div className={styles.feedbackPanelDate}>
+                                        Reviewed {new Date(latestReview.reviewedAt ?? latestReview.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                                        {reviewedSubs.length > 1 && ` · submission ${reviewedSubs.length} of ${subs.length}`}
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <span className={`${styles.pill} ${latestReview.status === "approved" ? styles.pillApproved : styles.pillRejected}`}>
+                                    {latestReview.status}
+                                  </span>
+                                </div>
+                                {latestReview.review.summary && (
+                                  <p className={styles.feedbackPanelSummary}>{latestReview.review.summary}</p>
+                                )}
+                                {latestReview.review.flags.length > 0 && (
+                                  <div className={styles.feedbackPanelSection}>
+                                    <div className={styles.feedbackPanelSectionTitle}>Issues flagged</div>
+                                    {latestReview.review.flags.map((flag, i) => (
+                                      <div key={i} className={`${styles.flagRow} ${styles[`flag_${flag.severity}`]}`}>
+                                        <span className={styles.flagSev}>{flag.severity}</span>
+                                        <span className={styles.flagText}>{flag.text}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                                {latestReview.review.strengths.length > 0 && (
+                                  <div className={styles.feedbackPanelSection}>
+                                    <div className={styles.feedbackPanelSectionTitle}>Strengths</div>
+                                    {latestReview.review.strengths.map((s, i) => (
+                                      <div key={i} className={styles.strengthRow}>✓ {s}</div>
+                                    ))}
+                                  </div>
+                                )}
+                                {latestReview.review.action_items.length > 0 && (
+                                  <div className={styles.feedbackPanelSection}>
+                                    <div className={styles.feedbackPanelSectionTitle}>
+                                      {latestReview.status === "approved" ? "Suggestions" : "To fix before resubmitting"}
+                                    </div>
+                                    {latestReview.review.action_items.map((a, i) => (
+                                      <div key={i} className={styles.actionRow}>→ {a}</div>
+                                    ))}
+                                  </div>
+                                )}
                                 {latestReview.managerNotes && (
                                   <div className={styles.managerNote}>
                                     <span className={styles.managerNoteLabel}>From your manager:</span> {latestReview.managerNotes}
