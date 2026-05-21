@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { Task, TaskStatus } from "@/lib/types";
+import type { Task, TaskStatus, Submission } from "@/lib/types";
 import styles from "./Intern.module.css";
 
-const INTERNS = ["Alex", "Jordan", "Sam"];
+const INTERNS = ["Natalie", "Sam"];
 
 const STATUS_LABELS: Record<TaskStatus, string> = {
   todo: "To Do",
@@ -15,10 +15,10 @@ const STATUS_LABELS: Record<TaskStatus, string> = {
 };
 
 const STATUS_ORDER: TaskStatus[] = [
-  "in_progress", "under_review", "needs_revision", "todo", "complete"
+  "needs_revision", "in_progress", "under_review", "todo", "complete",
 ];
 
-function statusClass(s: TaskStatus, styles: Record<string, string>) {
+function statusClass(s: TaskStatus) {
   return {
     todo: styles.statusTodo,
     in_progress: styles.statusInProgress,
@@ -28,33 +28,129 @@ function statusClass(s: TaskStatus, styles: Record<string, string>) {
   }[s] ?? "";
 }
 
+function isThisWeek(dateStr: string): boolean {
+  const d = new Date(dateStr);
+  const now = new Date();
+  const weekAgo = new Date(now);
+  weekAgo.setDate(now.getDate() - 7);
+  return d >= weekAgo && d <= now;
+}
+
+function isDueThisWeek(dateStr: string): boolean {
+  const d = new Date(dateStr + "T00:00:00");
+  const now = new Date();
+  const weekAhead = new Date(now);
+  weekAhead.setDate(now.getDate() + 7);
+  return d >= now && d <= weekAhead;
+}
+
+type AuthState = { name: string; pin: string } | null;
+
 export default function InternPage() {
-  const [intern, setIntern] = useState<string | null>(null);
+  const [step, setStep] = useState<"pick" | "pin" | "dashboard">("pick");
+  const [selectedName, setSelectedName] = useState("");
+  const [pin, setPin] = useState("");
+  const [pinError, setPinError] = useState("");
+  const [pinLoading, setPinLoading] = useState(false);
+  const [auth, setAuth] = useState<AuthState>(null);
+
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [dataLoading, setDataLoading] = useState(false);
 
+  const [activeTab, setActiveTab] = useState<"tasks" | "weekly">("tasks");
+
+  // Restore session on load
   useEffect(() => {
-    if (!intern) return;
-    setLoading(true);
-    fetch("/api/tasks")
-      .then(r => r.json())
-      .then(data => {
-        const all: Task[] = data.tasks ?? [];
-        setTasks(all.filter(t => t.assignedTo === intern));
+    const stored = sessionStorage.getItem("intern_auth");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as AuthState;
+        if (parsed) {
+          setAuth(parsed);
+          setStep("dashboard");
+        }
+      } catch (_) {}
+    }
+  }, []);
+
+  // Fetch data when authed
+  useEffect(() => {
+    if (!auth) return;
+    setDataLoading(true);
+    Promise.all([
+      fetch("/api/tasks").then(r => r.json()),
+      fetch("/api/intern/submissions", {
+        headers: {
+          "x-intern-name": auth.name,
+          "x-intern-pin": auth.pin,
+        },
+      }).then(r => r.json()),
+    ])
+      .then(([taskData, subData]) => {
+        const allTasks: Task[] = taskData.tasks ?? [];
+        setTasks(allTasks.filter(t => t.assignedTo === auth.name));
+        setSubmissions(subData.submissions ?? []);
       })
-      .finally(() => setLoading(false));
-  }, [intern]);
+      .finally(() => setDataLoading(false));
+  }, [auth]);
 
-  const todo = tasks.filter(t => t.status === "todo");
-  const active = tasks.filter(t => t.status === "in_progress" || t.status === "under_review" || t.status === "needs_revision");
-  const done = tasks.filter(t => t.status === "complete");
-  const overdue = tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "complete");
-  const pct = tasks.length ? Math.round((done.length / tasks.length) * 100) : 0;
+  const handlePickName = (name: string) => {
+    setSelectedName(name);
+    setPin("");
+    setPinError("");
+    setStep("pin");
+  };
 
-  const sortedTasks = [...tasks].sort((a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status));
+  const handlePinSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPinLoading(true);
+    setPinError("");
+    try {
+      const res = await fetch("/api/intern-auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: selectedName, pin }),
+      });
+      if (res.ok) {
+        const a: AuthState = { name: selectedName, pin };
+        sessionStorage.setItem("intern_auth", JSON.stringify(a));
+        setAuth(a);
+        setStep("dashboard");
+      } else {
+        setPinError("Incorrect PIN. Try again.");
+        setPin("");
+      }
+    } finally {
+      setPinLoading(false);
+    }
+  };
 
-  // ── Intern picker ──────────────────────────────────────────────────────────
-  if (!intern) {
+  const handleSignOut = () => {
+    sessionStorage.removeItem("intern_auth");
+    setAuth(null);
+    setStep("pick");
+    setPin("");
+    setTasks([]);
+    setSubmissions([]);
+  };
+
+  // ── Derived data ────────────────────────────────────────────────────────────
+  const sortedTasks = [...tasks].sort(
+    (a, b) => STATUS_ORDER.indexOf(a.status) - STATUS_ORDER.indexOf(b.status)
+  );
+  const doneTasks = tasks.filter(t => t.status === "complete");
+  const activeTasks = tasks.filter(t => ["in_progress", "under_review", "needs_revision"].includes(t.status));
+  const overdueTasks = tasks.filter(t => t.dueDate && new Date(t.dueDate) < new Date() && t.status !== "complete");
+  const pct = tasks.length ? Math.round((doneTasks.length / tasks.length) * 100) : 0;
+
+  const dueSoonTasks = tasks.filter(t => t.dueDate && isDueThisWeek(t.dueDate) && t.status !== "complete");
+  const recentSubs = submissions.filter(s => isThisWeek(s.submittedAt));
+  const feedbackReceived = submissions.filter(s => s.status !== "pending" && isThisWeek(s.reviewedAt ?? ""));
+  const needsRevisionTasks = tasks.filter(t => t.status === "needs_revision");
+
+  // ── Pick name ──────────────────────────────────────────────────────────────
+  if (step === "pick") {
     return (
       <div className={styles.pickWrap}>
         <div className={styles.pickCard}>
@@ -63,7 +159,7 @@ export default function InternPage() {
           <p className={styles.pickPrompt}>Who are you?</p>
           <div className={styles.pickBtns}>
             {INTERNS.map(name => (
-              <button key={name} className={styles.pickBtn} onClick={() => setIntern(name)}>
+              <button key={name} className={styles.pickBtn} onClick={() => handlePickName(name)}>
                 {name}
               </button>
             ))}
@@ -73,97 +169,297 @@ export default function InternPage() {
     );
   }
 
-  // ── Dashboard ──────────────────────────────────────────────────────────────
-  return (
-    <div className={styles.shell}>
-      <div className={styles.topbar}>
-        <div>
-          <h1 className={styles.title}>My Tasks</h1>
-          <p className={styles.sub}>Welcome back, {intern} · Strategic Finance</p>
-        </div>
-        <div className={styles.topbarRight}>
-          <a href="/" className={styles.submitLink}>Submit deliverable →</a>
-          <button className={styles.switchBtn} onClick={() => setIntern(null)}>
-            Switch intern
+  // ── PIN entry ──────────────────────────────────────────────────────────────
+  if (step === "pin") {
+    return (
+      <div className={styles.pickWrap}>
+        <div className={styles.pickCard}>
+          <h1 className={styles.pickTitle}>{selectedName}</h1>
+          <p className={styles.pickSub}>Enter your PIN to continue</p>
+          <form onSubmit={handlePinSubmit} className={styles.pinForm}>
+            <input
+              type="password"
+              inputMode="numeric"
+              placeholder="PIN"
+              value={pin}
+              onChange={e => setPin(e.target.value)}
+              className={styles.pinInput}
+              maxLength={10}
+              autoFocus
+            />
+            <button type="submit" className={styles.pinBtn} disabled={pinLoading || !pin}>
+              {pinLoading ? "Checking…" : "Continue →"}
+            </button>
+          </form>
+          {pinError && <p className={styles.pinError}>{pinError}</p>}
+          <button className={styles.backLink} onClick={() => setStep("pick")}>
+            ← Not {selectedName}?
           </button>
         </div>
       </div>
+    );
+  }
+
+  // ── Dashboard ──────────────────────────────────────────────────────────────
+  return (
+    <div className={styles.shell}>
+      {/* Top bar */}
+      <div className={styles.topbar}>
+        <div>
+          <h1 className={styles.title}>Hey, {auth?.name}</h1>
+          <p className={styles.sub}>Strategic Finance · Summer 2026</p>
+        </div>
+        <div className={styles.topbarRight}>
+          <a href="/" className={styles.submitLink}>Submit deliverable →</a>
+          <button className={styles.switchBtn} onClick={handleSignOut}>Sign out</button>
+        </div>
+      </div>
+
+      {/* Tab bar */}
+      <nav className={styles.tabBar}>
+        <button
+          className={`${styles.tabBtn} ${activeTab === "tasks" ? styles.tabActive : ""}`}
+          onClick={() => setActiveTab("tasks")}
+        >
+          My Tasks {tasks.length > 0 ? `(${tasks.length})` : ""}
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === "weekly" ? styles.tabActive : ""}`}
+          onClick={() => setActiveTab("weekly")}
+        >
+          This Week
+          {(needsRevisionTasks.length > 0 || dueSoonTasks.length > 0) && (
+            <span className={styles.tabAlert}>!</span>
+          )}
+        </button>
+      </nav>
 
       <div className={styles.body}>
-        {loading ? (
+        {dataLoading ? (
           <p className={styles.loadingMsg}>Loading…</p>
-        ) : tasks.length === 0 ? (
-          <div className={styles.emptyState}>
-            <p>No tasks assigned yet.</p>
-            <p className={styles.emptySub}>Check back once your manager adds your tasks.</p>
-          </div>
         ) : (
           <>
-            {/* Summary bar */}
-            <div className={styles.summaryRow}>
-              <div className={styles.summaryCard}>
-                <span className={styles.summaryNum}>{tasks.length}</span>
-                <span className={styles.summaryLabel}>Total</span>
-              </div>
-              <div className={styles.summaryCard}>
-                <span className={styles.summaryNum}>{active.length}</span>
-                <span className={styles.summaryLabel}>Active</span>
-              </div>
-              <div className={styles.summaryCard}>
-                <span className={styles.summaryNum}>{done.length}</span>
-                <span className={styles.summaryLabel}>Done</span>
-              </div>
-              {overdue.length > 0 && (
-                <div className={styles.summaryCard}>
-                  <span className={`${styles.summaryNum} ${styles.summaryAlert}`}>{overdue.length}</span>
-                  <span className={styles.summaryLabel}>Overdue</span>
-                </div>
-              )}
-            </div>
-
-            {/* Progress bar */}
-            <div className={styles.progressWrap}>
-              <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{ width: `${pct}%` }} />
-              </div>
-              <span className={styles.progressPct}>{pct}% complete</span>
-            </div>
-
-            {/* Task list */}
-            <div className={styles.taskList}>
-              {sortedTasks.map(task => {
-                const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "complete";
-                return (
-                  <div key={task.id} className={`${styles.taskCard} ${task.status === "complete" ? styles.taskDone : ""}`}>
-                    <div className={styles.taskCardTop}>
-                      <span className={`${styles.statusBadge} ${statusClass(task.status, styles)}`}>
-                        {STATUS_LABELS[task.status]}
-                      </span>
-                      {isOverdue && <span className={styles.overdueBadge}>Overdue</span>}
-                    </div>
-                    <div className={styles.taskTitle}>{task.title}</div>
-                    {task.description && (
-                      <div className={styles.taskDesc}>{task.description}</div>
-                    )}
-                    <div className={styles.taskMeta}>
-                      {task.dueDate && (
-                        <span className={`${styles.taskDue} ${isOverdue ? styles.taskDueOverdue : ""}`}>
-                          Due {new Date(task.dueDate + "T00:00:00").toLocaleDateString()}
-                        </span>
-                      )}
-                      {task.submissionIds.length > 0 && (
-                        <span className={styles.taskSubs}>
-                          {task.submissionIds.length} submission{task.submissionIds.length !== 1 ? "s" : ""}
-                        </span>
-                      )}
-                    </div>
-                    {(task.status === "needs_revision" || task.status === "todo" || task.status === "in_progress") && (
-                      <a href="/" className={styles.submitTaskLink}>Submit deliverable →</a>
-                    )}
+            {/* ── TASKS TAB ── */}
+            {activeTab === "tasks" && (
+              <>
+                {tasks.length === 0 ? (
+                  <div className={styles.emptyState}>
+                    <p>No tasks assigned yet.</p>
+                    <p className={styles.emptySub}>Check back once your manager adds your tasks.</p>
                   </div>
-                );
-              })}
-            </div>
+                ) : (
+                  <>
+                    {/* Summary row */}
+                    <div className={styles.summaryRow}>
+                      <div className={styles.summaryCard}>
+                        <span className={styles.summaryNum}>{tasks.length}</span>
+                        <span className={styles.summaryLabel}>Total</span>
+                      </div>
+                      <div className={styles.summaryCard}>
+                        <span className={styles.summaryNum}>{activeTasks.length}</span>
+                        <span className={styles.summaryLabel}>Active</span>
+                      </div>
+                      <div className={styles.summaryCard}>
+                        <span className={styles.summaryNum}>{doneTasks.length}</span>
+                        <span className={styles.summaryLabel}>Done</span>
+                      </div>
+                      {overdueTasks.length > 0 && (
+                        <div className={styles.summaryCard}>
+                          <span className={`${styles.summaryNum} ${styles.summaryAlert}`}>{overdueTasks.length}</span>
+                          <span className={styles.summaryLabel}>Overdue</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Progress */}
+                    <div className={styles.progressWrap}>
+                      <div className={styles.progressBar}>
+                        <div className={styles.progressFill} style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className={styles.progressPct}>{pct}% complete</span>
+                    </div>
+
+                    {/* Task list */}
+                    <div className={styles.taskList}>
+                      {sortedTasks.map(task => {
+                        const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== "complete";
+                        return (
+                          <div
+                            key={task.id}
+                            className={`${styles.taskCard} ${task.status === "complete" ? styles.taskDone : ""}`}
+                          >
+                            <div className={styles.taskCardTop}>
+                              <span className={`${styles.statusBadge} ${statusClass(task.status)}`}>
+                                {STATUS_LABELS[task.status]}
+                              </span>
+                              {isOverdue && <span className={styles.overdueBadge}>Overdue</span>}
+                            </div>
+                            <div className={styles.taskTitle}>{task.title}</div>
+                            {task.description && (
+                              <div className={styles.taskDesc}>{task.description}</div>
+                            )}
+                            <div className={styles.taskMeta}>
+                              {task.dueDate && (
+                                <span className={`${styles.taskDue} ${isOverdue ? styles.taskDueOverdue : ""}`}>
+                                  Due {new Date(task.dueDate + "T00:00:00").toLocaleDateString()}
+                                </span>
+                              )}
+                              {task.submissionIds.length > 0 && (
+                                <span className={styles.taskSubs}>
+                                  {task.submissionIds.length} submission{task.submissionIds.length !== 1 ? "s" : ""}
+                                </span>
+                              )}
+                            </div>
+                            {(task.status === "needs_revision" || task.status === "todo" || task.status === "in_progress") && (
+                              <a href="/" className={styles.submitTaskLink}>Submit deliverable →</a>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
+              </>
+            )}
+
+            {/* ── WEEKLY TAB ── */}
+            {activeTab === "weekly" && (
+              <div className={styles.weeklyPane}>
+
+                {/* Needs revision — highest priority */}
+                {needsRevisionTasks.length > 0 && (
+                  <div className={styles.weeklySection}>
+                    <div className={styles.weeklySectionHeader}>
+                      <span className={styles.weeklySectionTitle}>Action Required</span>
+                      <span className={styles.weeklyBadgeRed}>{needsRevisionTasks.length}</span>
+                    </div>
+                    {needsRevisionTasks.map(task => {
+                      // Find the most recent submission for this task
+                      const taskSubs = submissions
+                        .filter(s => s.taskId === task.id || s.task === task.title)
+                        .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+                      const latestSub = taskSubs[0];
+                      return (
+                        <div key={task.id} className={styles.revisionCard}>
+                          <div className={styles.revisionTitle}>{task.title}</div>
+                          {latestSub && latestSub.status === "rejected" && (
+                            <>
+                              {latestSub.review.summary && (
+                                <p className={styles.revisionSummary}>{latestSub.review.summary}</p>
+                              )}
+                              {latestSub.review.action_items.length > 0 && (
+                                <div className={styles.revisionItems}>
+                                  <span className={styles.revisionItemsLabel}>To fix:</span>
+                                  {latestSub.review.action_items.map((item, i) => (
+                                    <div key={i} className={styles.revisionItem}>· {item}</div>
+                                  ))}
+                                </div>
+                              )}
+                              {latestSub.managerNotes && (
+                                <div className={styles.managerNote}>
+                                  <span className={styles.managerNoteLabel}>Manager note:</span> {latestSub.managerNotes}
+                                </div>
+                              )}
+                            </>
+                          )}
+                          <a href="/" className={styles.submitTaskLink}>Resubmit →</a>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Due this week */}
+                {dueSoonTasks.length > 0 && (
+                  <div className={styles.weeklySection}>
+                    <div className={styles.weeklySectionHeader}>
+                      <span className={styles.weeklySectionTitle}>Due This Week</span>
+                      <span className={styles.weeklyBadge}>{dueSoonTasks.length}</span>
+                    </div>
+                    {dueSoonTasks.map(task => (
+                      <div key={task.id} className={styles.dueCard}>
+                        <div className={styles.dueCardLeft}>
+                          <span className={`${styles.statusBadge} ${statusClass(task.status)}`}>
+                            {STATUS_LABELS[task.status]}
+                          </span>
+                          <span className={styles.dueTitle}>{task.title}</span>
+                        </div>
+                        <span className={styles.dueDate}>
+                          {new Date(task.dueDate! + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Feedback received this week */}
+                {feedbackReceived.length > 0 && (
+                  <div className={styles.weeklySection}>
+                    <div className={styles.weeklySectionHeader}>
+                      <span className={styles.weeklySectionTitle}>Feedback Received</span>
+                      <span className={styles.weeklyBadge}>{feedbackReceived.length}</span>
+                    </div>
+                    {feedbackReceived.map(sub => (
+                      <div key={sub.id} className={styles.feedbackCard}>
+                        <div className={styles.feedbackTop}>
+                          <span className={styles.feedbackTask}>{sub.task}</span>
+                          <span className={`${styles.feedbackGrade} ${sub.status === "approved" ? styles.gradeApproved : styles.gradeRejected}`}>
+                            {sub.review.grade}
+                          </span>
+                          <span className={`${styles.pill} ${sub.status === "approved" ? styles.pillApproved : styles.pillRejected}`}>
+                            {sub.status}
+                          </span>
+                        </div>
+                        {sub.review.summary && (
+                          <p className={styles.feedbackSummary}>{sub.review.summary}</p>
+                        )}
+                        {sub.review.strengths.length > 0 && (
+                          <div className={styles.feedbackStrengths}>
+                            {sub.review.strengths.slice(0, 2).map((s, i) => (
+                              <div key={i} className={styles.strengthItem}>✓ {s}</div>
+                            ))}
+                          </div>
+                        )}
+                        {sub.managerNotes && (
+                          <div className={styles.managerNote}>
+                            <span className={styles.managerNoteLabel}>From your manager:</span> {sub.managerNotes}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Submissions this week */}
+                {recentSubs.length > 0 && (
+                  <div className={styles.weeklySection}>
+                    <div className={styles.weeklySectionHeader}>
+                      <span className={styles.weeklySectionTitle}>Submitted This Week</span>
+                      <span className={styles.weeklyBadge}>{recentSubs.length}</span>
+                    </div>
+                    {recentSubs.map(sub => (
+                      <div key={sub.id} className={styles.subRow}>
+                        <span className={styles.subTask}>{sub.task}</span>
+                        <span className={styles.subDate}>
+                          {new Date(sub.submittedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </span>
+                        <span className={`${styles.pill} ${sub.status === "approved" ? styles.pillApproved : sub.status === "rejected" ? styles.pillRejected : styles.pillPending}`}>
+                          {sub.status}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* All quiet */}
+                {needsRevisionTasks.length === 0 && dueSoonTasks.length === 0 && feedbackReceived.length === 0 && recentSubs.length === 0 && (
+                  <div className={styles.emptyState}>
+                    <p>All caught up!</p>
+                    <p className={styles.emptySub}>Nothing due or pending this week.</p>
+                  </div>
+                )}
+              </div>
+            )}
           </>
         )}
       </div>
