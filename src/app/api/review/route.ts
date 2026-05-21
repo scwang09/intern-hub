@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import { saveSubmission, linkSubmissionToTask } from "@/lib/db";
+import { saveSubmission, linkSubmissionToTask, getTask } from "@/lib/db";
 import { notifyManagerNewSubmission } from "@/lib/notify";
 import type { Submission, ReviewResult } from "@/lib/types";
 
@@ -105,8 +105,23 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // Fetch task description from DB if a taskId was provided
+    let taskDescription = "";
+    if (taskId) {
+      const taskObj = await getTask(taskId);
+      if (taskObj?.description) taskDescription = taskObj.description;
+    }
+
     parts.push({
-      text: `Intern: ${intern}\nTask: ${task}\nFile: ${fileName}\n${notes ? `Manager notes: ${notes}` : ""}\n\nPlease review this deliverable and return your JSON assessment.`,
+      text: [
+        `Intern: ${intern}`,
+        `Task: ${task}`,
+        taskDescription ? `Task description: ${taskDescription}` : "",
+        `File: ${fileName}`,
+        notes ? `Intern notes: ${notes}` : "",
+        "",
+        "Please review this deliverable and return your JSON assessment.",
+      ].filter(Boolean).join("\n"),
     });
 
     const model = genAI.getGenerativeModel({
