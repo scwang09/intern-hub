@@ -82,7 +82,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
+  padding: 14px 24px;
   border-bottom: 1px solid #1a1a1a;
   flex-shrink: 0;
 }
@@ -114,10 +114,347 @@
 
 .refreshBtn:hover { border-color: #444; color: #ccc; }
 
-/* ── Layout ──────────────────────────────────────────────────────────────── */
-.layout {
+/* ── Tab bar ─────────────────────────────────────────────────────────────── */
+.tabBar {
   display: flex;
+  gap: 0;
+  border-bottom: 1px solid #1a1a1a;
+  padding: 0 24px;
+  flex-shrink: 0;
+}
+
+.tabBtn {
+  padding: 10px 18px;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #555;
+  font-size: 0.85rem;
+  cursor: pointer;
+  margin-bottom: -1px;
+  white-space: nowrap;
+}
+
+.tabBtn:hover { color: #aaa; }
+
+.tabActive {
+  color: #f0f0f0;
+  border-bottom-color: #0070f3;
+}
+
+/* ── Content area ────────────────────────────────────────────────────────── */
+.content {
   flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Overview ────────────────────────────────────────────────────────────── */
+.overviewGrid {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.statsRow {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.statCard {
+  flex: 1;
+  min-width: 100px;
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.statNum {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #f0f0f0;
+  line-height: 1;
+}
+
+.statNumAlert { color: #f0a500; }
+
+.statLabel {
+  font-size: 0.72rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sectionTitle {
+  font-size: 0.78rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  margin-bottom: 12px;
+  margin-top: 4px;
+}
+
+.internCards {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+}
+
+.internCard {
+  flex: 1;
+  min-width: 200px;
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 10px;
+  padding: 16px 18px;
+}
+
+.internCardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.internName {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #ddd;
+}
+
+.internPct {
+  font-size: 0.85rem;
+  color: #0070f3;
+  font-weight: 600;
+}
+
+.progressBar {
+  height: 4px;
+  background: #1e1e1e;
+  border-radius: 2px;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: #0070f3;
+  border-radius: 2px;
+  transition: width 0.4s ease;
+}
+
+.internStats {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #555;
+}
+
+.pendingList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.pendingItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.pendingItem:hover { border-color: #333; }
+
+.pendingName {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ddd;
+  min-width: 60px;
+}
+
+.pendingTask {
+  font-size: 0.82rem;
+  color: #666;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pendingDate {
+  font-size: 0.72rem;
+  color: #444;
+}
+
+/* ── Tasks pane ──────────────────────────────────────────────────────────── */
+.tasksPane {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.tasksPaneHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.newTaskBtn {
+  padding: 7px 14px;
+  border-radius: 7px;
+  border: 1px solid #2a2a2a;
+  background: transparent;
+  color: #888;
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.newTaskBtn:hover { border-color: #444; color: #ccc; }
+
+.newTaskForm {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.newTaskRow {
+  display: flex;
+  gap: 10px;
+}
+
+.taskColumns {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.taskCol {
+  flex: 1;
+  min-width: 180px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.taskColHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  color: #555;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.taskColDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusTodo         { background: #444; }
+.statusInProgress   { background: #0070f3; }
+.statusUnderReview  { background: #f0a500; }
+.statusNeedsRevision { background: #e05252; }
+.statusComplete     { background: #2ecc71; }
+
+.taskColCount {
+  margin-left: auto;
+  background: #1e1e1e;
+  border-radius: 10px;
+  padding: 1px 7px;
+  font-size: 0.68rem;
+  color: #555;
+}
+
+.taskCard {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.taskCard:hover { border-color: #2a2a2a; }
+
+.taskCardTitle {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #ddd;
+  line-height: 1.3;
+}
+
+.taskCardDesc {
+  font-size: 0.75rem;
+  color: #555;
+  line-height: 1.4;
+}
+
+.taskCardMeta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
+
+.taskCardIntern {
+  font-size: 0.72rem;
+  color: #0070f3;
+  font-weight: 500;
+}
+
+.taskCardDue {
+  font-size: 0.7rem;
+  color: #444;
+}
+
+.taskCardSubs {
+  font-size: 0.7rem;
+  color: #555;
+}
+
+.taskCardActions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.taskStatusSelect {
+  flex: 1;
+  font-size: 0.75rem !important;
+  padding: 4px 7px !important;
+}
+
+/* ── Submissions pane ────────────────────────────────────────────────────── */
+.submissionsPane {
+  flex: 1;
+  display: flex;
   overflow: hidden;
 }
 
@@ -258,19 +595,6 @@
   padding: 32px;
   text-align: center;
 }
-
-.downloadBtn {
-  padding: 9px 18px;
-  border-radius: 7px;
-  border: 1px solid #2a2a2a;
-  background: transparent;
-  color: #aaa;
-  font-size: 0.85rem;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.downloadBtn:hover { border-color: #555; color: #ddd; }
 
 /* ── Review panel ────────────────────────────────────────────────────────── */
 .reviewPanel {
@@ -457,3 +781,94 @@
 
 .bannerApproved { background: #002a10; color: #2ecc71; }
 .bannerRejected { background: #2a0000; color: #e05252; }
+
+/* ── Weekly pane ─────────────────────────────────────────────────────────── */
+.weeklyPane {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.weeklySub {
+  font-size: 0.82rem;
+  color: #444;
+  margin: -6px 0 20px;
+}
+
+.weeklyCard {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 14px;
+}
+
+.weeklyCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.weeklyInternName {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #ddd;
+}
+
+.weeklyBadge {
+  font-size: 0.75rem;
+  color: #888;
+  background: #1e1e1e;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+
+.weeklyStats {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.weeklyStat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.weeklyStatNum {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f0f0f0;
+  line-height: 1;
+}
+
+.weeklyStatLabel {
+  font-size: 0.7rem;
+  color: #444;
+}
+
+.weeklySection {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.weeklySectionLabel {
+  font-size: 0.68rem;
+  color: #444;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 2px;
+}
+
+.weeklyTaskRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #aaa;
+}
