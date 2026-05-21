@@ -394,6 +394,38 @@
 
 .submitTaskLink:hover { text-decoration: underline; }
 
+.markInProgressBtn {
+  align-self: flex-start;
+  background: none;
+  border: 1px solid #2a2a2a;
+  border-radius: 6px;
+  color: #666;
+  font-size: 0.75rem;
+  padding: 5px 12px;
+  cursor: pointer;
+  margin-top: 2px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.markInProgressBtn:hover {
+  border-color: #555;
+  color: #ccc;
+}
+
+.viewFileLink {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: #0070f3;
+  text-decoration: none;
+  opacity: 0.85;
+}
+
+.viewFileLink:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
+
 /* ── Task card expanded state ─────────────────────────────────────────────── */
 .taskCardExpanded {
   border-color: #2a2a2a;
