@@ -7,7 +7,7 @@ import styles from "./Manager.module.css";
 const VERDICTS = ["Approve", "Approve with minor fixes", "Needs revision", "Reject"];
 const GRADES = ["A", "B+", "B", "C+", "C", "D"];
 const SEVERITIES = ["high", "medium", "low"];
-const INTERNS = ["Alex", "Jordan", "Sam"];
+const INTERNS = ["Natalie", "Sam"];
 const TASK_STATUSES: { value: TaskStatus; label: string }[] = [
   { value: "todo", label: "To Do" },
   { value: "in_progress", label: "In Progress" },
