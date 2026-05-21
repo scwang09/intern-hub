@@ -58,6 +58,9 @@ export default function ManagerPage() {
   const [managerNotes, setManagerNotes] = useState("");
   const [saving, setSaving] = useState(false);
 
+  // ── Approve/reject confirmation state ─────────────────────────────────────
+  const [confirmingAction, setConfirmingAction] = useState<"approved" | "rejected" | null>(null);
+
   // ── New task form state ────────────────────────────────────────────────────
   const [newTask, setNewTask] = useState({ title: "", assignedTo: INTERNS[0], dueDate: "", description: "" });
   const [taskSaving, setTaskSaving] = useState(false);
@@ -112,6 +115,7 @@ export default function ManagerPage() {
   const handleSelect = (sub: Submission) => {
     setSelected({ ...sub, review: { ...sub.review } });
     setManagerNotes(sub.managerNotes ?? "");
+    setConfirmingAction(null);
   };
 
   const updateReviewField = <K extends keyof ReviewResult>(field: K, value: ReviewResult[K]) => {
@@ -167,6 +171,7 @@ export default function ManagerPage() {
         const data = await res.json();
         setSubmissions((prev) => prev.map((s) => (s.id === selected.id ? data.submission : s)));
         setSelected(data.submission);
+        setConfirmingAction(null);
         // Refresh tasks to reflect status change
         const taskRes = await fetch("/api/tasks");
         const taskData = await taskRes.json();
@@ -745,22 +750,54 @@ export default function ManagerPage() {
 
                   {/* Actions */}
                   {editable ? (
-                    <div className={styles.actions}>
-                      <button
-                        className={styles.btnApprove}
-                        onClick={() => handleAction("approved")}
-                        disabled={saving}
-                      >
-                        {saving ? "Sending…" : "✓ Approve & notify intern"}
-                      </button>
-                      <button
-                        className={styles.btnReject}
-                        onClick={() => handleAction("rejected")}
-                        disabled={saving}
-                      >
-                        Reject
-                      </button>
-                    </div>
+                    confirmingAction ? (
+                      <div className={styles.confirmBox}>
+                        <div className={styles.confirmHeader}>
+                          <span className={`${styles.confirmLabel} ${confirmingAction === "approved" ? styles.confirmLabelApprove : styles.confirmLabelReject}`}>
+                            {confirmingAction === "approved" ? "✓ Approving submission" : "✗ Rejecting submission"}
+                          </span>
+                          <button className={styles.confirmCancel} onClick={() => setConfirmingAction(null)}>Cancel</button>
+                        </div>
+                        <div className={styles.confirmNoteWrap}>
+                          <label className={styles.confirmNoteLabel}>
+                            Notes for intern
+                            <span className={styles.confirmNoteOptional}> (optional)</span>
+                          </label>
+                          <textarea
+                            className={styles.confirmNoteArea}
+                            rows={3}
+                            placeholder={confirmingAction === "approved"
+                              ? "Any suggestions or comments to pass along…"
+                              : "What needs to be fixed before resubmitting…"}
+                            value={managerNotes}
+                            onChange={e => setManagerNotes(e.target.value)}
+                            autoFocus
+                          />
+                        </div>
+                        <button
+                          className={confirmingAction === "approved" ? styles.btnApprove : styles.btnReject}
+                          onClick={() => handleAction(confirmingAction)}
+                          disabled={saving}
+                        >
+                          {saving ? "Sending…" : confirmingAction === "approved" ? "Confirm & notify intern" : "Confirm rejection"}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className={styles.actions}>
+                        <button
+                          className={styles.btnApprove}
+                          onClick={() => setConfirmingAction("approved")}
+                        >
+                          ✓ Approve
+                        </button>
+                        <button
+                          className={styles.btnReject}
+                          onClick={() => setConfirmingAction("rejected")}
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )
                   ) : (
                     <div className={`${styles.reviewedBanner} ${selected.status === "approved" ? styles.bannerApproved : styles.bannerRejected}`}>
                       {selected.status === "approved" ? "✓ Approved" : "✗ Rejected"}
