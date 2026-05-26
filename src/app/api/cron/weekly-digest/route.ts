@@ -118,7 +118,7 @@ function buildDigestEmail(intern: string, tasks: Task[], submissions: Submission
         <table style="width:100%;margin-bottom:6px"><tr>
           <td style="font-family:sans-serif;font-size:14px;font-weight:600;color:#222">${sub.submissionName || sub.task}</td>
           <td style="text-align:right">
-            <span style="font-family:monospace;font-size:14px;font-weight:700;color:${sub.status === "approved" ? "#166534" : "#7f1d1d"}">${sub.review.grade}</span>
+            <span style="font-family:monospace;font-size:14px;font-weight:700;color:${(() => { const n = Number(sub.review.grade); return n >= 5 ? "#22c55e" : n >= 4 ? "#60a5fa" : n >= 3 ? "#ca8a04" : n >= 2 ? "#ea580c" : "#dc2626"; })()}">${sub.review.grade}</span>
             &nbsp;
             <span style="font-family:sans-serif;font-size:11px;background:${sub.status === "approved" ? "#dcfce7" : "#fee2e2"};color:${sub.status === "approved" ? "#166534" : "#7f1d1d"};padding:2px 8px;border-radius:999px">${sub.status}</span>
           </td>
