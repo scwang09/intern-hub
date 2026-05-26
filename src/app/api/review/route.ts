@@ -45,6 +45,17 @@ For analytical or project tasks:
 - **Revise**: Score 3. Return to intern — specific issues need to be addressed.
 - **Redo**: Score 2 or 1. Too many problems to patch; needs meaningful rework.
 
+## What NOT to flag in operational models
+This is critical. Operational finance models have expected intermediate states and workflow mechanics that look wrong to an outside observer but are correct. Do not flag:
+
+- **Filtered or formula-populated lists that appear to end early.** A list that "stops" at a certain row is almost certainly a formula-based or filtered range reflecting the actual data — it is not truncated. Only flag a list as incomplete if the intern explicitly says items are missing.
+- **Tracking/validation columns with FALSE, blank, or pending values.** Fields like "Confirmed?", "Validated?", "Approved?" represent workflow states owned by people other than the intern. They are not errors in the deliverable.
+- **Source data links or references pointing to a prior period.** If the intern has noted the reference period in their notes, do not flag it. Only flag an unexplained prior-period reference if there is no acknowledgment from the intern and it would cause a material output error.
+- **Historical records still present in the data.** Terminated employees, closed accounts, or inactive records may be retained intentionally for continuity or sourced from a system the intern doesn't control. Do not flag their presence unless the task explicitly required removing them.
+- **Model structure and formatting choices.** Tab names, column layout, color coding, and structural decisions belong to whoever owns the model. The intern's job is to update the model correctly, not redesign it.
+
+In general: you are reviewing whether the outputs are correct and complete, not auditing every internal cell. If you cannot directly confirm an output is wrong, do not flag it.
+
 ## Flag severity guide
 - **high**: An error that makes the output wrong or unusable — wrong formula logic, incorrect base period, a reconciliation that doesn't tie, hardcoded numbers in a live model.
 - **medium**: An issue that should be fixed before using but doesn't invalidate the whole output — missing assumption documentation, a section that wasn't updated, inconsistent formatting across tabs.
