@@ -6,6 +6,15 @@ import styles from "./Intern.module.css";
 
 const INTERNS = ["Natalie", "Sam"];
 
+function gradeClass(grade: string | number, s: typeof styles): string {
+  const n = Number(grade);
+  if (n >= 5) return s.grade5;
+  if (n >= 4) return s.grade4;
+  if (n >= 3) return s.grade3;
+  if (n >= 2) return s.grade2;
+  return s.grade1;
+}
+
 function getViewerUrl(fileName: string, fileUrl: string): string {
   const n = fileName.toLowerCase();
   if (n.endsWith(".pdf")) return fileUrl;
@@ -392,7 +401,7 @@ export default function InternPage() {
                                     {/* Header: grade + verdict + date */}
                                     <div className={styles.feedbackPanelHeader}>
                                       <div className={styles.feedbackPanelGradeWrap}>
-                                        <span className={`${styles.feedbackPanelGrade} ${rev.status === "approved" ? styles.gradeApproved : styles.gradeRejected}`}>
+                                        <span className={`${styles.feedbackPanelGrade} ${gradeClass(rev.review.grade, styles)}`}>
                                           {rev.review.grade}
                                         </span>
                                         <div>
@@ -518,7 +527,7 @@ export default function InternPage() {
                                 <div className={styles.feedbackPanelDivider} />
                                 <div className={styles.feedbackPanelHeader}>
                                   <div className={styles.feedbackPanelGradeWrap}>
-                                    <span className={`${styles.feedbackPanelGrade} ${sub.status === "approved" ? styles.gradeApproved : styles.gradeRejected}`}>
+                                    <span className={`${styles.feedbackPanelGrade} ${gradeClass(sub.review.grade, styles)}`}>
                                       {sub.review.grade}
                                     </span>
                                     <div>
@@ -702,7 +711,7 @@ export default function InternPage() {
                       <div key={sub.id} className={styles.feedbackCard}>
                         <div className={styles.feedbackTop}>
                           <span className={styles.feedbackTask}>{sub.submissionName || sub.task}</span>
-                          <span className={`${styles.feedbackGrade} ${sub.status === "approved" ? styles.gradeApproved : styles.gradeRejected}`}>
+                          <span className={`${styles.feedbackGrade} ${gradeClass(sub.review.grade, styles)}`}>
                             {sub.review.grade}
                           </span>
                           <span className={`${styles.pill} ${sub.status === "approved" ? styles.pillApproved : styles.pillRejected}`}>
