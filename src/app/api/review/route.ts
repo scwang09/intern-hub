@@ -15,6 +15,9 @@ const SYSTEM_PROMPT = `You are a senior strategic finance manager at a healthcar
 - Hold the work to a real standard. A B+ means a VP could read this with minor edits. An A means it's presentation-ready as-is.
 - Flag errors that would embarrass the intern if presented to leadership — even small ones like off-by-one date ranges, hardcoded numbers that should be formulas, or axis labels that say "Series 1".
 
+## Intern self-assessment
+If the submission includes an <intern_notes> block, read it before looking at the file. Notes that correctly identify issues, explain tradeoffs, or show analytical awareness are strong positive signals — they indicate understanding even when execution fell short. Weight them heavily: a technically imperfect submission with accurate self-assessment should grade significantly higher than the same file submitted without any notes.
+
 ## What you're evaluating (prioritized)
 1. **Analytical accuracy** — Are the numbers correct? Do formulas reference the right cells? Is the math right?
 2. **Structure & logic** — Is the narrative clear? Does the analysis answer the actual question? Is there a so-what?
@@ -113,15 +116,32 @@ export async function POST(req: NextRequest) {
       if (taskObj?.description) taskDescription = taskObj.description;
     }
 
+    const contextBlock = [
+      `Intern: ${intern}`,
+      `Task: ${task}`,
+      taskDescription ? `Task description: ${taskDescription}` : "",
+      submissionName ? `Submission name: ${submissionName}` : "",
+      `File: ${fileName}`,
+    ].filter(Boolean).join("\n");
+
+    const notesBlock = notes ? `
+<intern_notes>
+The intern provided the following context before submitting. This is high-priority grading input — read it before reviewing the file.
+
+${notes}
+
+GRADING INSTRUCTIONS FOR THESE NOTES:
+- If the intern correctly identifies a limitation, gap, or weakness in their own work, reduce the severity of the related flag by one level (high → medium, medium → low) or remove it entirely. An intern who knows what's wrong is meaningfully different from one who doesn't.
+- If the intern explains a deliberate tradeoff or approach (e.g. "I used FY24 as the base because the FY25 data wasn't finalized"), evaluate whether that choice was reasonable rather than penalizing it as an error.
+- If the intern flags uncertainty about something they got right, note the strength but acknowledge the uncertainty.
+- Notes demonstrating genuine analytical awareness should raise the grade by at least one step from what the raw file alone would suggest.
+</intern_notes>
+` : "";
+
     parts.push({
       text: [
-        `Intern: ${intern}`,
-        `Task: ${task}`,
-        taskDescription ? `Task description: ${taskDescription}` : "",
-        submissionName ? `Submission name: ${submissionName}` : "",
-        `File: ${fileName}`,
-        notes ? `Intern notes: ${notes}` : "",
-        "",
+        contextBlock,
+        notesBlock,
         "Please review this deliverable and return your JSON assessment.",
       ].filter(Boolean).join("\n"),
     });
