@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from "react";
 import type { Submission, ReviewResult, ReviewFlag, Task, TaskStatus } from "@/lib/types";
 import styles from "./Manager.module.css";
 
-const VERDICTS = ["Approve", "Approve with minor fixes", "Needs revision", "Reject"];
-const GRADES = ["A", "B+", "B", "C+", "C", "D"];
+const VERDICTS = ["Approved", "Minor fixes", "Revise", "Redo"];
+const GRADES = ["5", "4", "3", "2", "1"];
 const SEVERITIES = ["high", "medium", "low"];
 const INTERNS = ["Natalie", "Sam"];
 const TASK_STATUSES: { value: TaskStatus; label: string }[] = [
