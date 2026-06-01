@@ -401,9 +401,11 @@ export default function InternPage() {
                                     {/* Header: grade + verdict + date */}
                                     <div className={styles.feedbackPanelHeader}>
                                       <div className={styles.feedbackPanelGradeWrap}>
-                                        <span className={`${styles.feedbackPanelGrade} ${gradeClass(rev.review.grade, styles)}`}>
-                                          {rev.review.grade}
-                                        </span>
+                                        {rev.review.grade && (
+                                          <span className={`${styles.feedbackPanelGrade} ${gradeClass(rev.review.grade, styles)}`}>
+                                            {rev.review.grade}
+                                          </span>
+                                        )}
                                         <div>
                                           {rev.submissionName && (
                                             <div className={styles.feedbackPanelSubName}>{rev.submissionName}</div>
@@ -527,9 +529,11 @@ export default function InternPage() {
                                 <div className={styles.feedbackPanelDivider} />
                                 <div className={styles.feedbackPanelHeader}>
                                   <div className={styles.feedbackPanelGradeWrap}>
-                                    <span className={`${styles.feedbackPanelGrade} ${gradeClass(sub.review.grade, styles)}`}>
-                                      {sub.review.grade}
-                                    </span>
+                                    {sub.review.grade && (
+                                      <span className={`${styles.feedbackPanelGrade} ${gradeClass(sub.review.grade, styles)}`}>
+                                        {sub.review.grade}
+                                      </span>
+                                    )}
                                     <div>
                                       <div className={styles.feedbackPanelVerdict}>{sub.review.verdict}</div>
                                       <div className={styles.feedbackPanelDate}>
@@ -711,9 +715,11 @@ export default function InternPage() {
                       <div key={sub.id} className={styles.feedbackCard}>
                         <div className={styles.feedbackTop}>
                           <span className={styles.feedbackTask}>{sub.submissionName || sub.task}</span>
-                          <span className={`${styles.feedbackGrade} ${gradeClass(sub.review.grade, styles)}`}>
-                            {sub.review.grade}
-                          </span>
+                          {sub.review.grade && (
+                            <span className={`${styles.feedbackGrade} ${gradeClass(sub.review.grade, styles)}`}>
+                              {sub.review.grade}
+                            </span>
+                          )}
                           <span className={`${styles.pill} ${sub.status === "approved" ? styles.pillApproved : styles.pillRejected}`}>
                             {sub.status}
                           </span>
