@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllTasks, saveTask } from "@/lib/db";
-import type { Task, TaskStatus } from "@/lib/types";
+import type { Task, TaskStatus, TaskType } from "@/lib/types";
 
 function verifyAuth(req: NextRequest): boolean {
   const pwd = req.headers.get("x-manager-password");
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { title, description, assignedTo, dueDate } = body;
+  const { title, description, assignedTo, dueDate, taskType } = body;
 
   if (!title || !assignedTo) {
     return NextResponse.json(
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
     title,
     description: description ?? "",
     assignedTo,
+    taskType: (taskType ?? "operational") as TaskType,
     status: "todo" as TaskStatus,
     dueDate: dueDate ?? undefined,
     createdBy: "manager",
