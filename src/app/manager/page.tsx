@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Submission, ReviewResult, ReviewFlag, Task, TaskStatus } from "@/lib/types";
+import type { Submission, ReviewResult, ReviewFlag, Task, TaskStatus, TaskType } from "@/lib/types";
 import styles from "./Manager.module.css";
 
 const VERDICTS = ["Approved", "Minor fixes", "Revise", "Redo"];
@@ -62,7 +62,9 @@ export default function ManagerPage() {
   const [confirmingAction, setConfirmingAction] = useState<"approved" | "rejected" | null>(null);
 
   // ── New task form state ────────────────────────────────────────────────────
-  const [newTask, setNewTask] = useState({ title: "", assignedTo: INTERNS[0], dueDate: "", description: "" });
+  const [newTask, setNewTask] = useState<{ title: string; assignedTo: string; dueDate: string; description: string; taskType: TaskType }>({
+    title: "", assignedTo: INTERNS[0], dueDate: "", description: "", taskType: "operational",
+  });
   const [taskSaving, setTaskSaving] = useState(false);
   const [showNewTask, setShowNewTask] = useState(false);
 
@@ -209,7 +211,7 @@ export default function ManagerPage() {
       if (res.ok) {
         const data = await res.json();
         setTasks((prev) => [data.task, ...prev]);
-        setNewTask({ title: "", assignedTo: INTERNS[0], dueDate: "", description: "" });
+        setNewTask({ title: "", assignedTo: INTERNS[0], dueDate: "", description: "", taskType: "operational" });
         setShowNewTask(false);
       }
     } finally {
@@ -424,6 +426,16 @@ export default function ManagerPage() {
                     style={{ maxWidth: 160 }}
                   />
                 </div>
+                <div className={styles.newTaskRow}>
+                  <select
+                    className={styles.fieldSelect}
+                    value={newTask.taskType}
+                    onChange={e => setNewTask(v => ({ ...v, taskType: e.target.value as TaskType }))}
+                  >
+                    <option value="operational">Operational</option>
+                    <option value="project">Project / Analysis</option>
+                  </select>
+                </div>
                 <textarea
                   className={styles.fieldTextarea}
                   placeholder="Description (optional)"
@@ -452,7 +464,12 @@ export default function ManagerPage() {
                       </div>
                       {colTasks.map(task => (
                         <div key={task.id} className={styles.taskCard}>
-                          <div className={styles.taskCardTitle}>{task.title}</div>
+                          <div className={styles.taskCardTop}>
+                            <div className={styles.taskCardTitle}>{task.title}</div>
+                            <span className={`${styles.taskTypeBadge} ${task.taskType === "operational" ? styles.taskTypeOp : styles.taskTypeProject}`}>
+                              {task.taskType === "operational" ? "Ops" : "Project"}
+                            </span>
+                          </div>
                           {task.description && (
                             <div className={styles.taskCardDesc}>{task.description}</div>
                           )}
@@ -604,6 +621,11 @@ export default function ManagerPage() {
                     <div>
                       <p className={styles.detailMeta}>
                         {selected.intern} · {selected.internEmail} · {selected.task}
+                        {selected.taskType && (
+                          <span className={`${styles.taskTypeBadge} ${selected.taskType === "operational" ? styles.taskTypeOp : styles.taskTypeProject}`} style={{ marginLeft: 8 }}>
+                            {selected.taskType === "operational" ? "Operational" : "Project"}
+                          </span>
+                        )}
                       </p>
                       <h2 className={styles.detailTitle}>
                         {selected.submissionName || selected.review.title || selected.task}
