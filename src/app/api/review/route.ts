@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { saveSubmission, linkSubmissionToTask, getTask } from "@/lib/db";
 import { notifyManagerNewSubmission } from "@/lib/notify";
-import type { Submission, ReviewResult } from "@/lib/types";
+import type { Submission, ReviewResult, TaskType } from "@/lib/types";
 
 // ── Switch back to Anthropic: replace genAI client + generateContent call below ──
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY ?? "");
@@ -80,6 +80,41 @@ JSON shape:
   "grade": 5
 }`;
 
+const OPERATIONAL_PROMPT = `You are a quality control assistant doing a pre-check on an operational finance deliverable before it goes to a manager for review. Your ONLY job is to scan for concrete, verifiable errors. You are NOT grading quality, assessing completeness, or making judgments about analytical choices.
+
+## What to scan for
+1. **Broken formulas** — cells showing #REF, #NAME, #VALUE, #DIV/0, or similar errors where a value is expected.
+2. **Dates or period labels not rolled** — report headers, tab names, column labels, or period references that still show the prior period when they should have been updated (e.g. a March report with January in the header).
+3. **Obvious hardcodes where formulas should be** — a value that clearly breaks a formula pattern in surrounding cells (e.g. every cell in a column is a formula except one that's hardcoded).
+4. **Clear reconciliation failures** — totals that visibly don't add up, or two cells that should match but obviously don't.
+
+## What NOT to flag
+- Tracking or workflow columns with FALSE, blank, or in-progress values — these are process states, not errors.
+- Filtered or formula-populated lists that appear to end early — these reflect the actual data, they are not truncated.
+- Prior-period data source references that the intern has acknowledged in their notes.
+- Historical records (terminated employees, closed items) that may be retained intentionally.
+- Any judgment about quality, thoroughness, or analytical approach — that is the manager's job.
+- Anything you cannot directly verify is wrong from the file itself.
+
+If the intern has provided notes in an <intern_notes> block, read them before scanning. If a note explains something that would otherwise look like an error, do not flag it.
+
+Leave grade and verdict as empty strings — the manager will set these manually.
+
+Respond ONLY with a valid JSON object. No preamble, no markdown fences.
+
+JSON shape:
+{
+  "title": "short descriptive title for this deliverable",
+  "verdict": "",
+  "summary": "1-2 sentences: what this deliverable appears to be, and whether any concrete errors were found. If none were found, say so clearly.",
+  "flags": [
+    { "severity": "high|medium|low", "text": "Specific verifiable error with exact location — e.g. 'Cell D8 on the Summary tab shows #REF — formula is broken'" }
+  ],
+  "strengths": [],
+  "action_items": [],
+  "grade": ""
+}`;
+
 export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
@@ -92,6 +127,7 @@ export async function POST(req: NextRequest) {
     const internEmail = formData.get("internEmail") as string;
     const task = formData.get("task") as string;
     const taskId = (formData.get("taskId") as string) || undefined;
+    const taskType = ((formData.get("taskType") as string) || "project") as TaskType;
     const submissionName = (formData.get("submissionName") as string) || undefined;
     const notes = formData.get("notes") as string;
 
@@ -165,7 +201,7 @@ GRADING INSTRUCTIONS FOR THESE NOTES:
 
     const model = genAI.getGenerativeModel({
       model: "gemini-2.5-pro",
-      systemInstruction: SYSTEM_PROMPT,
+      systemInstruction: taskType === "operational" ? OPERATIONAL_PROMPT : SYSTEM_PROMPT,
     });
 
     const result = await model.generateContent({
@@ -190,6 +226,7 @@ GRADING INSTRUCTIONS FOR THESE NOTES:
       internEmail,
       task,
       taskId,
+      taskType,
       submissionName,
       fileName,
       fileUrl, // already in Blob — reuse the URL
