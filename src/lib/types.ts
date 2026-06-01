@@ -16,12 +16,15 @@ export interface ReviewResult {
   task?: string;
 }
 
+export type TaskType = "operational" | "project";
+
 export interface Submission {
   id: string;
   intern: string;
   internEmail: string;
   task: string;
   taskId?: string;
+  taskType?: TaskType;
   submissionName?: string;
   fileName: string;
   fileUrl?: string;
@@ -39,6 +42,7 @@ export interface Task {
   title: string;
   description?: string;
   assignedTo: string;
+  taskType: TaskType;
   status: TaskStatus;
   dueDate?: string;
   createdBy: string;
