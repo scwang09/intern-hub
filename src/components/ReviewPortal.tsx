@@ -3,7 +3,7 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { upload } from "@vercel/blob/client";
 import styles from "./ReviewPortal.module.css";
-import type { Task } from "@/lib/types";
+import type { Task, TaskType } from "@/lib/types";
 
 const INTERNS = ["Natalie", "Sam"];
 
@@ -13,6 +13,7 @@ export default function ReviewPortal() {
   const [internEmail, setInternEmail] = useState("");
   const [taskId, setTaskId] = useState<string>("");
   const [taskTitle, setTaskTitle] = useState("");
+  const [taskType, setTaskType] = useState<TaskType>("operational");
   const [availableTasks, setAvailableTasks] = useState<Task[]>([]);
   const [submissionName, setSubmissionName] = useState("");
   const [notes, setNotes] = useState("");
@@ -36,9 +37,11 @@ export default function ReviewPortal() {
         if (myTasks.length > 0) {
           setTaskId(myTasks[0].id);
           setTaskTitle(myTasks[0].title);
+          setTaskType(myTasks[0].taskType ?? "operational");
         } else {
           setTaskId("");
           setTaskTitle("Other / unlisted");
+          setTaskType("operational");
         }
       })
       .catch(() => {});
@@ -51,10 +54,12 @@ export default function ReviewPortal() {
     if (val === "__other__") {
       setTaskId("");
       setTaskTitle("Other / unlisted");
+      setTaskType("operational");
     } else {
       const found = availableTasks.find(t => t.id === val);
       setTaskId(val);
       setTaskTitle(found?.title ?? "");
+      setTaskType(found?.taskType ?? "operational");
     }
   };
 
@@ -98,6 +103,7 @@ export default function ReviewPortal() {
       formData.append("internEmail", internEmail.trim());
       formData.append("task", taskTitle || "Other / unlisted");
       if (taskId) formData.append("taskId", taskId);
+      formData.append("taskType", taskType);
       if (submissionName.trim()) formData.append("submissionName", submissionName.trim());
       formData.append("notes", notes);
 
@@ -223,6 +229,19 @@ export default function ReviewPortal() {
             <option value="__other__">Other / unlisted</option>
           </select>
         </div>
+        {!taskId && (
+          <div className={styles.fieldGroup}>
+            <label htmlFor="task-type-select">Task type</label>
+            <select
+              id="task-type-select"
+              value={taskType}
+              onChange={(e) => setTaskType(e.target.value as TaskType)}
+            >
+              <option value="operational">Operational</option>
+              <option value="project">Project / Analysis</option>
+            </select>
+          </div>
+        )}
         <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
           <label htmlFor="submission-name-input">Submission name <span className={styles.optionalLabel}>(optional)</span></label>
           <input
