@@ -38,11 +38,16 @@ async function sendEmail(to: string, subject: string, html: string) {
 }
 
 export async function notifyManagerNewSubmission(sub: Submission) {
-  const { intern, internEmail, task, fileName, review } = sub;
+  const { intern, internEmail, task, fileName, review, taskType } = sub;
   const dashboardUrl = `${APP_URL}/manager`;
+  const isOp = taskType === "operational";
+  const aiLine = isOp
+    ? `Error scan: ${review.flags.length} issue${review.flags.length !== 1 ? "s" : ""} found — needs your manual review`
+    : `AI Verdict: ${review.verdict} (${review.grade})`;
+  const typeLabel = isOp ? "Operational" : "Project / Analysis";
 
   await postSlack(
-    `📥 *New submission from ${intern}*\nTask: ${task}  |  File: ${fileName}\nAI Verdict: ${review.verdict} (${review.grade})\n<${dashboardUrl}|Review in dashboard>`
+    `📥 *New submission from ${intern}*\nTask: ${task}  |  Type: ${typeLabel}  |  File: ${fileName}\n${aiLine}\n<${dashboardUrl}|Review in dashboard>`
   );
 
   await sendEmail(
@@ -52,8 +57,9 @@ export async function notifyManagerNewSubmission(sub: Submission) {
      <p style="font-family:sans-serif"><strong>${intern}</strong> (${internEmail}) submitted their work.</p>
      <table style="font-family:sans-serif">
        <tr><td style="padding:4px 12px 4px 0;color:#666">Task</td><td>${task}</td></tr>
+       <tr><td style="padding:4px 12px 4px 0;color:#666">Type</td><td>${typeLabel}</td></tr>
        <tr><td style="padding:4px 12px 4px 0;color:#666">File</td><td>${fileName}</td></tr>
-       <tr><td style="padding:4px 12px 4px 0;color:#666">AI Verdict</td><td>${review.verdict} (${review.grade})</td></tr>
+       <tr><td style="padding:4px 12px 4px 0;color:#666">${isOp ? "Error scan" : "AI Verdict"}</td><td>${isOp ? `${review.flags.length} issue${review.flags.length !== 1 ? "s" : ""} found` : `${review.verdict} (${review.grade})`}</td></tr>
      </table>
      <p style="font-family:sans-serif;color:#444">${review.summary}</p>
      <p><a href="${dashboardUrl}" style="background:#0070f3;color:#fff;padding:10px 20px;text-decoration:none;border-radius:6px;font-family:sans-serif;display:inline-block;margin-top:8px">Review in dashboard →</a></p>`
