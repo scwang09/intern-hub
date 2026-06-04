@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import type { Submission, ReviewResult, ReviewFlag, Task, TaskStatus, TaskType } from "@/lib/types";
+import type { Submission, ReviewResult, ReviewFlag, Task, TaskStatus, TaskType, RecurringFrequency } from "@/lib/types";
 import styles from "./Manager.module.css";
 
 const VERDICTS = ["Approved", "Minor fixes", "Revise", "Redo"];
@@ -60,6 +60,14 @@ export default function ManagerPage() {
 
   // ── Approve/reject confirmation state ─────────────────────────────────────
   const [confirmingAction, setConfirmingAction] = useState<"approved" | "rejected" | null>(null);
+
+  // ── Recurring task state ───────────────────────────────────────────────────
+  const [showNewRecurring, setShowNewRecurring] = useState(false);
+  const [newRecurring, setNewRecurring] = useState<{
+    title: string; description: string; taskType: TaskType;
+    frequency: RecurringFrequency; assignees: string[]; startDate: string;
+  }>({ title: "", description: "", taskType: "project", frequency: "weekly", assignees: [...INTERNS], startDate: "" });
+  const [recurringSaving, setRecurringSaving] = useState(false);
 
   // ── New task form state ────────────────────────────────────────────────────
   const [newTask, setNewTask] = useState<{ title: string; assignedTo: string; dueDate: string; description: string; taskType: TaskType }>({
@@ -219,6 +227,41 @@ export default function ManagerPage() {
     }
   };
 
+  const handleCreateRecurring = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newRecurring.title.trim() || !newRecurring.startDate || newRecurring.assignees.length === 0) return;
+    setRecurringSaving(true);
+    try {
+      const res = await fetch("/api/tasks", {
+        method: "POST",
+        headers: { "x-manager-password": savedPwd, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title: newRecurring.title,
+          description: newRecurring.description,
+          taskType: newRecurring.taskType,
+          isRecurring: true,
+          recurringFrequency: newRecurring.frequency,
+          recurringNextSpawnAt: new Date(newRecurring.startDate + "T08:00:00Z").toISOString(),
+          recurringAssignees: newRecurring.assignees,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setTasks(prev => [data.task, ...prev]);
+        setNewRecurring({ title: "", description: "", taskType: "project", frequency: "weekly", assignees: [...INTERNS], startDate: "" });
+        setShowNewRecurring(false);
+      }
+    } finally {
+      setRecurringSaving(false);
+    }
+  };
+
+  const handleDeleteRecurring = async (taskId: string) => {
+    if (!window.confirm("Delete this recurring task? Future instances won't be created, but existing ones are unaffected.")) return;
+    const res = await fetch(`/api/tasks/${taskId}`, { method: "DELETE", headers: { "x-manager-password": savedPwd } });
+    if (res.ok) setTasks(prev => prev.filter(t => t.id !== taskId));
+  };
+
   const handleTaskStatusChange = async (taskId: string, status: TaskStatus) => {
     const res = await fetch(`/api/tasks/${taskId}`, {
       method: "PATCH",
@@ -248,9 +291,12 @@ export default function ManagerPage() {
   const approved = submissions.filter((s) => s.status === "approved");
   const editable = selected?.status === "pending";
 
+  const recurringTemplates = tasks.filter(t => t.isRecurring);
+  const activeTasks = tasks.filter(t => !t.isRecurring);
+
   const tasksByIntern = INTERNS.map((intern) => ({
     intern,
-    tasks: tasks.filter((t) => t.assignedTo === intern),
+    tasks: activeTasks.filter((t) => t.assignedTo === intern),
   }));
 
   // ── Auth gate ──────────────────────────────────────────────────────────────
@@ -449,12 +495,12 @@ export default function ManagerPage() {
               </form>
             )}
 
-            {tasks.length === 0 ? (
+            {activeTasks.length === 0 ? (
               <p className={styles.emptyMsg}>No tasks yet. Create one above.</p>
             ) : (
               <div className={styles.taskColumns}>
                 {TASK_STATUSES.map(({ value, label }) => {
-                  const colTasks = tasks.filter(t => t.status === value);
+                  const colTasks = activeTasks.filter(t => t.status === value);
                   return (
                     <div key={value} className={styles.taskCol}>
                       <div className={styles.taskColHeader}>
@@ -507,6 +553,112 @@ export default function ManagerPage() {
                 })}
               </div>
             )}
+          </div>
+
+            {/* ── Recurring Templates ── */}
+            <div className={styles.recurringSection}>
+              <div className={styles.recurringSectionHeader}>
+                <span className={styles.sectionTitle} style={{ margin: 0 }}>↻ Recurring Tasks</span>
+                <button className={styles.newTaskBtn} onClick={() => setShowNewRecurring(v => !v)}>
+                  {showNewRecurring ? "Cancel" : "+ New Recurring"}
+                </button>
+              </div>
+
+              {showNewRecurring && (
+                <form onSubmit={handleCreateRecurring} className={styles.newTaskForm}>
+                  <div className={styles.newTaskRow}>
+                    <input
+                      className={styles.fieldInput}
+                      placeholder="Task title (e.g. Weekly Project Check-in)"
+                      value={newRecurring.title}
+                      onChange={e => setNewRecurring(v => ({ ...v, title: e.target.value }))}
+                      required
+                    />
+                    <select
+                      className={styles.fieldSelect}
+                      value={newRecurring.frequency}
+                      onChange={e => setNewRecurring(v => ({ ...v, frequency: e.target.value as RecurringFrequency }))}
+                    >
+                      <option value="weekly">Weekly</option>
+                      <option value="biweekly">Every 2 weeks</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                    <select
+                      className={styles.fieldSelect}
+                      value={newRecurring.taskType}
+                      onChange={e => setNewRecurring(v => ({ ...v, taskType: e.target.value as TaskType }))}
+                    >
+                      <option value="project">Project / Analysis</option>
+                      <option value="operational">Operational</option>
+                    </select>
+                  </div>
+                  <div className={styles.newTaskRow}>
+                    <label className={styles.fieldLabel} style={{ alignSelf: "center", whiteSpace: "nowrap" }}>First occurrence</label>
+                    <input
+                      type="date"
+                      className={styles.fieldInput}
+                      value={newRecurring.startDate}
+                      onChange={e => setNewRecurring(v => ({ ...v, startDate: e.target.value }))}
+                      required
+                      style={{ maxWidth: 180 }}
+                    />
+                    <div className={styles.recurringAssignees}>
+                      {INTERNS.map(name => (
+                        <label key={name} className={styles.recurringAssigneeLabel}>
+                          <input
+                            type="checkbox"
+                            checked={newRecurring.assignees.includes(name)}
+                            onChange={e => {
+                              setNewRecurring(v => ({
+                                ...v,
+                                assignees: e.target.checked
+                                  ? [...v.assignees, name]
+                                  : v.assignees.filter(a => a !== name),
+                              }));
+                            }}
+                          />
+                          {name}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <textarea
+                    className={styles.fieldTextarea}
+                    placeholder="Description shown to intern each time this task spawns (optional)"
+                    value={newRecurring.description}
+                    rows={2}
+                    onChange={e => setNewRecurring(v => ({ ...v, description: e.target.value }))}
+                  />
+                  <button type="submit" className={styles.btnApprove} disabled={recurringSaving || newRecurring.assignees.length === 0}>
+                    {recurringSaving ? "Creating…" : "Create Recurring Task"}
+                  </button>
+                </form>
+              )}
+
+              {recurringTemplates.length === 0 && !showNewRecurring ? (
+                <p className={styles.emptyMsg} style={{ marginTop: 8 }}>No recurring tasks set up yet.</p>
+              ) : (
+                <div className={styles.recurringList}>
+                  {recurringTemplates.map(t => (
+                    <div key={t.id} className={styles.recurringCard}>
+                      <div className={styles.recurringCardLeft}>
+                        <span className={styles.recurringFreqBadge}>
+                          {t.recurringFrequency === "weekly" ? "Weekly" : t.recurringFrequency === "biweekly" ? "Every 2 weeks" : "Monthly"}
+                        </span>
+                        <span className={`${styles.taskTypeBadge} ${t.taskType === "operational" ? styles.taskTypeOp : styles.taskTypeProject}`}>
+                          {t.taskType === "operational" ? "Ops" : "Project"}
+                        </span>
+                        <span className={styles.recurringCardTitle}>{t.title}</span>
+                        <span className={styles.recurringCardMeta}>
+                          → {t.recurringAssignees?.join(", ")} · next: {t.recurringNextSpawnAt ? new Date(t.recurringNextSpawnAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "—"}
+                        </span>
+                      </div>
+                      <button className={styles.removeBtn} onClick={() => handleDeleteRecurring(t.id)} title="Delete recurring task">×</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
