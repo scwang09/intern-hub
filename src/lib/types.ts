@@ -17,6 +17,7 @@ export interface ReviewResult {
 }
 
 export type TaskType = "operational" | "project";
+export type RecurringFrequency = "weekly" | "biweekly" | "monthly";
 
 export interface Submission {
   id: string;
@@ -49,4 +50,12 @@ export interface Task {
   createdAt: string;
   updatedAt: string;
   submissionIds: string[];
+  // Recurring template fields
+  isRecurring?: boolean;
+  recurringFrequency?: RecurringFrequency;
+  recurringNextSpawnAt?: string;
+  recurringAssignees?: string[];
+  // Recurring instance fields
+  isRecurringInstance?: boolean;
+  recurringParentId?: string;
 }
