@@ -22,9 +22,13 @@ export async function POST(req: NextRequest) {
   const { title, description, assignedTo, dueDate, taskType,
           isRecurring, recurringFrequency, recurringNextSpawnAt, recurringAssignees } = body;
 
-  if (!title || !assignedTo) {
+  const needsAssignee = isRecurring
+    ? !recurringAssignees || recurringAssignees.length === 0
+    : !assignedTo;
+
+  if (!title || needsAssignee) {
     return NextResponse.json(
-      { error: "title and assignedTo are required" },
+      { error: isRecurring ? "title and recurringAssignees are required" : "title and assignedTo are required" },
       { status: 400 }
     );
   }
@@ -34,7 +38,7 @@ export async function POST(req: NextRequest) {
     id: crypto.randomUUID(),
     title,
     description: description ?? "",
-    assignedTo: assignedTo ?? (recurringAssignees?.[0] ?? ""),
+    assignedTo: assignedTo ?? recurringAssignees?.[0] ?? "",
     taskType: (taskType ?? "operational") as TaskType,
     status: "todo" as TaskStatus,
     dueDate: dueDate ?? undefined,
