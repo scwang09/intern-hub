@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllTasks, saveTask } from "@/lib/db";
-import type { Task, TaskStatus, TaskType } from "@/lib/types";
+import type { Task, TaskStatus, TaskType, RecurringFrequency } from "@/lib/types";
 
 function verifyAuth(req: NextRequest): boolean {
   const pwd = req.headers.get("x-manager-password");
@@ -19,7 +19,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { title, description, assignedTo, dueDate, taskType } = body;
+  const { title, description, assignedTo, dueDate, taskType,
+          isRecurring, recurringFrequency, recurringNextSpawnAt, recurringAssignees } = body;
 
   if (!title || !assignedTo) {
     return NextResponse.json(
@@ -33,7 +34,7 @@ export async function POST(req: NextRequest) {
     id: crypto.randomUUID(),
     title,
     description: description ?? "",
-    assignedTo,
+    assignedTo: assignedTo ?? (recurringAssignees?.[0] ?? ""),
     taskType: (taskType ?? "operational") as TaskType,
     status: "todo" as TaskStatus,
     dueDate: dueDate ?? undefined,
@@ -41,6 +42,12 @@ export async function POST(req: NextRequest) {
     createdAt: now,
     updatedAt: now,
     submissionIds: [],
+    ...(isRecurring ? {
+      isRecurring: true,
+      recurringFrequency: recurringFrequency as RecurringFrequency,
+      recurringNextSpawnAt,
+      recurringAssignees: recurringAssignees ?? [],
+    } : {}),
   };
 
   await saveTask(task);
