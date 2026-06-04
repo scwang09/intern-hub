@@ -107,7 +107,7 @@ export default function InternPage() {
     ])
       .then(([taskData, subData]) => {
         const allTasks: Task[] = taskData.tasks ?? [];
-        setTasks(allTasks.filter(t => t.assignedTo === auth.name));
+        setTasks(allTasks.filter(t => t.assignedTo === auth.name && !t.isRecurring));
         setSubmissions(subData.submissions ?? []);
       })
       .finally(() => setDataLoading(false));
