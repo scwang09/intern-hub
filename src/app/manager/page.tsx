@@ -553,7 +553,6 @@ export default function ManagerPage() {
                 })}
               </div>
             )}
-          </div>
 
             {/* ── Recurring Templates ── */}
             <div className={styles.recurringSection}>
