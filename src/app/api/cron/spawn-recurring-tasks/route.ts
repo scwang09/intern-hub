@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllTasks, saveTask, updateTask } from "@/lib/db";
+import { notifyInternNewTask } from "@/lib/notify";
 import type { Task, TaskStatus, RecurringFrequency } from "@/lib/types";
 
 function nextSpawnDate(from: Date, frequency: RecurringFrequency): Date {
@@ -62,6 +63,7 @@ export async function GET(req: NextRequest) {
         recurringParentId: template.id,
       };
       await saveTask(instance);
+      await notifyInternNewTask(instance);
       spawnedIds.push(`${assignee}:${instance.id}`);
     }
 
