@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllTasks, saveTask } from "@/lib/db";
+import { notifyInternNewTask } from "@/lib/notify";
 import type { Task, TaskStatus, TaskType, RecurringFrequency } from "@/lib/types";
 
 function verifyAuth(req: NextRequest): boolean {
@@ -55,5 +56,12 @@ export async function POST(req: NextRequest) {
   };
 
   await saveTask(task);
+
+  // Notify the assigned intern — but not for recurring templates
+  // (those fire notifications when instances are actually spawned by the cron)
+  if (!isRecurring) {
+    await notifyInternNewTask(task);
+  }
+
   return NextResponse.json({ task }, { status: 201 });
 }
