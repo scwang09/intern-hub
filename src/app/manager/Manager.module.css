@@ -1059,3 +1059,167 @@
   font-size: 0.82rem;
   color: #aaa;
 }
+
+/* ── Workload badge (on kanban cards) ────────────────────────────────────── */
+.workloadBadge {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.02em;
+}
+.wl1 { background: #14532d; color: #4ade80; }
+.wl2 { background: #134e4a; color: #2dd4bf; }
+.wl3 { background: #713f12; color: #fbbf24; }
+.wl4 { background: #7c2d12; color: #fb923c; }
+.wl5 { background: #7f1d1d; color: #f87171; }
+.wlNone { background: #1e1e1e; color: #555; }
+
+/* ── Workload tab ─────────────────────────────────────────────────────────── */
+.workloadPane {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  overflow-y: auto;
+  height: 100%;
+}
+
+.workloadBalance {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 10px;
+  padding: 18px 20px;
+}
+
+.workloadBalanceHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.workloadTotalScore {
+  font-size: 0.78rem;
+  color: #555;
+}
+
+.workloadBalanceBars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.workloadBalanceRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.workloadBalanceName {
+  font-size: 0.82rem;
+  color: #ccc;
+  width: 70px;
+  flex-shrink: 0;
+}
+
+.workloadBalanceTrack {
+  flex: 1;
+  height: 10px;
+  background: #1e1e1e;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.workloadBalanceFill {
+  height: 100%;
+  background: #0070f3;
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+.workloadBalanceScore {
+  font-size: 0.78rem;
+  color: #555;
+  width: 130px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.workloadColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.workloadColumn {
+  background: #111;
+  border: 1px solid #1e1e1e;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.workloadColHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #1e1e1e;
+}
+
+.workloadColName {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #f0f0f0;
+}
+
+.workloadColScore {
+  font-size: 0.78rem;
+  color: #555;
+}
+
+.workloadTaskRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 10px;
+  background: #0d0d0d;
+  border: 1px solid #1a1a1a;
+  border-radius: 7px;
+}
+
+.workloadLevelBadge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.workloadTaskInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.workloadTaskTitle {
+  font-size: 0.85rem;
+  color: #e0e0e0;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.workloadTaskMeta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
