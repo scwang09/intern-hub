@@ -1223,3 +1223,16 @@
   gap: 6px;
   flex-wrap: wrap;
 }
+
+.workloadTaskRecurring {
+  border-color: #1e2a1e;
+  background: #0b0f0b;
+}
+
+.workloadRecurringLabel {
+  font-size: 0.7rem;
+  color: #4ade80;
+  background: #14532d;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
