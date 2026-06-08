@@ -65,8 +65,8 @@ export default function ManagerPage() {
   const [showNewRecurring, setShowNewRecurring] = useState(false);
   const [newRecurring, setNewRecurring] = useState<{
     title: string; description: string; taskType: TaskType;
-    frequency: RecurringFrequency; assignees: string[]; startDate: string;
-  }>({ title: "", description: "", taskType: "project", frequency: "weekly", assignees: [...INTERNS], startDate: "" });
+    frequency: RecurringFrequency; assignees: string[]; startDate: string; workload: number;
+  }>({ title: "", description: "", taskType: "project", frequency: "weekly", assignees: [...INTERNS], startDate: "", workload: 3 });
   const [recurringSaving, setRecurringSaving] = useState(false);
 
   // ── New task form state ────────────────────────────────────────────────────
@@ -239,6 +239,7 @@ export default function ManagerPage() {
           title: newRecurring.title,
           description: newRecurring.description,
           taskType: newRecurring.taskType,
+          workload: newRecurring.workload,
           isRecurring: true,
           recurringFrequency: newRecurring.frequency,
           recurringNextSpawnAt: new Date(newRecurring.startDate + "T08:00:00Z").toISOString(),
@@ -248,7 +249,7 @@ export default function ManagerPage() {
       if (res.ok) {
         const data = await res.json();
         setTasks(prev => [data.task, ...prev]);
-        setNewRecurring({ title: "", description: "", taskType: "project", frequency: "weekly", assignees: [...INTERNS], startDate: "" });
+        setNewRecurring({ title: "", description: "", taskType: "project", frequency: "weekly", assignees: [...INTERNS], startDate: "", workload: 3 });
         setShowNewRecurring(false);
       }
     } finally {
@@ -607,6 +608,18 @@ export default function ManagerPage() {
                     >
                       <option value="project">Project / Analysis</option>
                       <option value="operational">Operational</option>
+                    </select>
+                    <select
+                      className={styles.fieldSelect}
+                      value={newRecurring.workload}
+                      onChange={e => setNewRecurring(v => ({ ...v, workload: Number(e.target.value) }))}
+                      style={{ maxWidth: 180 }}
+                    >
+                      <option value={1}>1 — Light</option>
+                      <option value={2}>2 — Low</option>
+                      <option value={3}>3 — Moderate</option>
+                      <option value={4}>4 — Heavy</option>
+                      <option value={5}>5 — Intensive</option>
                     </select>
                   </div>
                   <div className={styles.newTaskRow}>
@@ -1083,10 +1096,15 @@ export default function ManagerPage() {
         {/* ── WORKLOAD ── */}
         {tab === "workload" && (() => {
           const WORKLOAD_LABELS: Record<number, string> = { 1: "Light", 2: "Low", 3: "Moderate", 4: "Heavy", 5: "Intensive" };
+          // Regular tasks that aren't complete, plus recurring templates (ongoing load)
           const activeScoredTasks = activeTasks.filter(t => t.status !== "complete");
+          const recurringForIntern = (intern: string) =>
+            recurringTemplates.filter(t => t.recurringAssignees?.includes(intern));
           const scoreFor = (intern: string) =>
-            activeScoredTasks.filter(t => t.assignedTo === intern).reduce((s, t) => s + (t.workload ?? 0), 0);
-          const countFor = (intern: string) => activeScoredTasks.filter(t => t.assignedTo === intern).length;
+            activeScoredTasks.filter(t => t.assignedTo === intern).reduce((s, t) => s + (t.workload ?? 0), 0) +
+            recurringForIntern(intern).reduce((s, t) => s + (t.workload ?? 0), 0);
+          const countFor = (intern: string) =>
+            activeScoredTasks.filter(t => t.assignedTo === intern).length + recurringForIntern(intern).length;
           const scores = INTERNS.map(scoreFor);
           const maxScore = Math.max(...scores, 1);
           const totalScore = scores.reduce((a, b) => a + b, 0);
@@ -1121,38 +1139,60 @@ export default function ManagerPage() {
                   const internActive = activeScoredTasks
                     .filter(t => t.assignedTo === intern)
                     .sort((a, b) => (b.workload ?? 0) - (a.workload ?? 0));
+                  const internRecurring = recurringForIntern(intern);
+                  const isEmpty = internActive.length === 0 && internRecurring.length === 0;
                   return (
                     <div key={intern} className={styles.workloadColumn}>
                       <div className={styles.workloadColHeader}>
                         <span className={styles.workloadColName}>{intern}</span>
                         <span className={styles.workloadColScore}>{scoreFor(intern)} pts</span>
                       </div>
-                      {internActive.length === 0 ? (
+                      {isEmpty ? (
                         <p className={styles.emptyMsg} style={{ padding: "12px 0" }}>No active tasks.</p>
                       ) : (
-                        internActive.map(task => (
-                          <div key={task.id} className={styles.workloadTaskRow}>
-                            <span className={`${styles.workloadLevelBadge} ${task.workload ? styles[`wl${task.workload}`] : styles.wlNone}`}>
-                              {task.workload ? `${task.workload} · ${WORKLOAD_LABELS[task.workload]}` : "—"}
-                            </span>
-                            <div className={styles.workloadTaskInfo}>
-                              <span className={styles.workloadTaskTitle}>{task.title}</span>
-                              <div className={styles.workloadTaskMeta}>
-                                <span className={`${styles.taskTypeBadge} ${task.taskType === "operational" ? styles.taskTypeOp : styles.taskTypeProject}`}>
-                                  {task.taskType === "operational" ? "Ops" : "Project"}
-                                </span>
-                                <span className={`${styles.pill} ${statusColor(task.status)}`} style={{ fontSize: "0.7rem", padding: "1px 7px" }}>
-                                  {TASK_STATUSES.find(s => s.value === task.status)?.label}
-                                </span>
-                                {task.dueDate && (
-                                  <span className={styles.taskCardDue}>
-                                    due {new Date(task.dueDate + "T00:00:00").toLocaleDateString()}
+                        <>
+                          {internActive.map(task => (
+                            <div key={task.id} className={styles.workloadTaskRow}>
+                              <span className={`${styles.workloadLevelBadge} ${task.workload ? styles[`wl${task.workload}`] : styles.wlNone}`}>
+                                {task.workload ? `${task.workload} · ${WORKLOAD_LABELS[task.workload]}` : "—"}
+                              </span>
+                              <div className={styles.workloadTaskInfo}>
+                                <span className={styles.workloadTaskTitle}>{task.title}</span>
+                                <div className={styles.workloadTaskMeta}>
+                                  <span className={`${styles.taskTypeBadge} ${task.taskType === "operational" ? styles.taskTypeOp : styles.taskTypeProject}`}>
+                                    {task.taskType === "operational" ? "Ops" : "Project"}
                                   </span>
-                                )}
+                                  <span className={`${styles.pill} ${statusColor(task.status)}`} style={{ fontSize: "0.7rem", padding: "1px 7px" }}>
+                                    {TASK_STATUSES.find(s => s.value === task.status)?.label}
+                                  </span>
+                                  {task.dueDate && (
+                                    <span className={styles.taskCardDue}>
+                                      due {new Date(task.dueDate + "T00:00:00").toLocaleDateString()}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))
+                          ))}
+                          {internRecurring.map(task => (
+                            <div key={task.id} className={`${styles.workloadTaskRow} ${styles.workloadTaskRecurring}`}>
+                              <span className={`${styles.workloadLevelBadge} ${task.workload ? styles[`wl${task.workload}`] : styles.wlNone}`}>
+                                {task.workload ? `${task.workload} · ${WORKLOAD_LABELS[task.workload]}` : "—"}
+                              </span>
+                              <div className={styles.workloadTaskInfo}>
+                                <span className={styles.workloadTaskTitle}>↻ {task.title}</span>
+                                <div className={styles.workloadTaskMeta}>
+                                  <span className={`${styles.taskTypeBadge} ${task.taskType === "operational" ? styles.taskTypeOp : styles.taskTypeProject}`}>
+                                    {task.taskType === "operational" ? "Ops" : "Project"}
+                                  </span>
+                                  <span className={styles.workloadRecurringLabel}>
+                                    {task.recurringFrequency === "weekly" ? "Weekly" : task.recurringFrequency === "biweekly" ? "Every 2 wks" : "Monthly"}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </>
                       )}
                     </div>
                   );
