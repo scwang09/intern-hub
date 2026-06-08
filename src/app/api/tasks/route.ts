@@ -20,7 +20,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { title, description, assignedTo, dueDate, taskType,
+  const { title, description, assignedTo, dueDate, taskType, workload,
           isRecurring, recurringFrequency, recurringNextSpawnAt, recurringAssignees } = body;
 
   const needsAssignee = isRecurring
@@ -42,6 +42,7 @@ export async function POST(req: NextRequest) {
     assignedTo: assignedTo ?? recurringAssignees?.[0] ?? "",
     taskType: (taskType ?? "operational") as TaskType,
     status: "todo" as TaskStatus,
+    workload: workload ? Number(workload) : undefined,
     dueDate: dueDate ?? undefined,
     createdBy: "manager",
     createdAt: now,
