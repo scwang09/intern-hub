@@ -107,7 +107,11 @@ export default function InternPage() {
     ])
       .then(([taskData, subData]) => {
         const allTasks: Task[] = taskData.tasks ?? [];
-        setTasks(allTasks.filter(t => t.assignedTo === auth.name && !t.isRecurring));
+        setTasks(allTasks.filter(t =>
+          t.isRecurring
+            ? (t.recurringAssignees?.includes(auth.name) ?? false)
+            : t.assignedTo === auth.name
+        ));
         setSubmissions(subData.submissions ?? []);
       })
       .finally(() => setDataLoading(false));
@@ -358,12 +362,22 @@ export default function InternPage() {
                               )}
                             </div>
 
-                            <div className={styles.taskTitle}>{task.title}</div>
+                            <div className={styles.taskTitle}>
+                              {task.isRecurring && (
+                                <span className={styles.recurringBadge}>↻ Recurring</span>
+                              )}
+                              {task.title}
+                            </div>
                             {task.description && (
                               <div className={styles.taskDesc}>{task.description}</div>
                             )}
                             <div className={styles.taskMeta}>
-                              {task.dueDate && (
+                              {task.isRecurring && task.recurringFrequency && (
+                                <span className={styles.taskDue}>
+                                  {task.recurringFrequency === "weekly" ? "Every week" : task.recurringFrequency === "biweekly" ? "Every 2 weeks" : "Every month"}
+                                </span>
+                              )}
+                              {!task.isRecurring && task.dueDate && (
                                 <span className={`${styles.taskDue} ${isOverdue ? styles.taskDueOverdue : ""}`}>
                                   Due {new Date(task.dueDate + "T00:00:00").toLocaleDateString()}
                                 </span>
@@ -381,7 +395,7 @@ export default function InternPage() {
                                 Submit deliverable →
                               </a>
                             )}
-                            {(task.status === "todo" || task.status === "needs_revision") && (
+                            {!task.isRecurring && (task.status === "todo" || task.status === "needs_revision") && (
                               <button
                                 className={styles.markInProgressBtn}
                                 onClick={() => handleMarkInProgress(task.id)}
