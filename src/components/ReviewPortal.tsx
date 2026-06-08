@@ -1,894 +1,294 @@
-/* ── Pick / PIN screens ──────────────────────────────────────────────────── */
-.pickWrap {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #0a0a0a;
-}
-
-.pickCard {
-  background: #111;
-  border: 1px solid #222;
-  border-radius: 14px;
-  padding: 44px;
-  width: 100%;
-  max-width: 360px;
-  text-align: center;
-}
-
-.pickTitle {
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #f0f0f0;
-  margin: 0 0 4px;
-}
-
-.pickSub {
-  font-size: 0.78rem;
-  color: #555;
-  margin: 0 0 28px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.pickPrompt {
-  font-size: 0.88rem;
-  color: #888;
-  margin: 0 0 14px;
-}
-
-.pickBtns {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.pickBtn {
-  padding: 14px;
-  border-radius: 9px;
-  border: 1px solid #2a2a2a;
-  background: #0a0a0a;
-  color: #ddd;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: border-color 0.15s, background 0.15s;
-}
-
-.pickBtn:hover {
-  border-color: #0070f3;
-  background: #0a1a2a;
-  color: #f0f0f0;
-}
-
-/* ── PIN form ─────────────────────────────────────────────────────────────── */
-.pinForm {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.pinInput {
-  padding: 12px 16px;
-  border-radius: 8px;
-  border: 1px solid #2a2a2a;
-  background: #0a0a0a;
-  color: #f0f0f0;
-  font-size: 1.1rem;
-  text-align: center;
-  letter-spacing: 0.3em;
-  outline: none;
-}
-
-.pinInput:focus { border-color: #0070f3; }
-
-.pinBtn {
-  padding: 12px;
-  border-radius: 8px;
-  border: none;
-  background: #0070f3;
-  color: #fff;
-  font-size: 0.95rem;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.pinBtn:hover:not(:disabled) { background: #0060d0; }
-.pinBtn:disabled { opacity: 0.45; cursor: not-allowed; }
-
-.pinError {
-  color: #e05252;
-  font-size: 0.82rem;
-  margin: 0 0 12px;
-}
-
-.backLink {
-  background: none;
-  border: none;
-  color: #444;
-  font-size: 0.8rem;
-  cursor: pointer;
-  padding: 0;
-  margin-top: 4px;
-}
-
-.backLink:hover { color: #888; }
-
-/* ── Shell ───────────────────────────────────────────────────────────────── */
-.shell {
-  min-height: 100vh;
-  background: #0a0a0a;
-  display: flex;
-  flex-direction: column;
-}
-
-.topbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 24px;
-  border-bottom: 1px solid #1a1a1a;
-  flex-shrink: 0;
-}
-
-.title {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #f0f0f0;
-  margin: 0;
-}
-
-.sub {
-  font-size: 0.72rem;
-  color: #555;
-  margin: 3px 0 0;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-}
-
-.topbarRight {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.submitLink {
-  color: #0070f3;
-  font-size: 0.85rem;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-.submitLink:hover { text-decoration: underline; }
-
-.switchBtn {
-  padding: 6px 12px;
-  border-radius: 6px;
-  border: 1px solid #2a2a2a;
-  background: transparent;
-  color: #666;
-  font-size: 0.8rem;
-  cursor: pointer;
-}
-
-.switchBtn:hover { border-color: #444; color: #aaa; }
-
-/* ── Tab bar ─────────────────────────────────────────────────────────────── */
-.tabBar {
-  display: flex;
-  gap: 0;
-  border-bottom: 1px solid #1a1a1a;
-  padding: 0 24px;
-  flex-shrink: 0;
-}
-
-.tabBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 18px;
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  color: #555;
-  font-size: 0.85rem;
-  cursor: pointer;
-  margin-bottom: -1px;
-}
-
-.tabBtn:hover { color: #aaa; }
-
-.tabActive {
-  color: #f0f0f0;
-  border-bottom-color: #0070f3;
-}
-
-.tabAlert {
-  background: #e05252;
-  color: #fff;
-  font-size: 0.6rem;
-  font-weight: 700;
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* ── Body ────────────────────────────────────────────────────────────────── */
-.body {
-  padding: 24px;
-  max-width: 680px;
-  width: 100%;
-  margin: 0 auto;
-  flex: 1;
-}
-
-.loadingMsg {
-  color: #444;
-  font-size: 0.88rem;
-  padding: 60px 0;
-  text-align: center;
-}
-
-.emptyState {
-  text-align: center;
-  padding: 60px 0;
-  color: #555;
-  font-size: 0.95rem;
-}
-
-.emptySub {
-  font-size: 0.8rem;
-  color: #333;
-  margin-top: 6px;
-}
-
-/* ── Summary ─────────────────────────────────────────────────────────────── */
-.summaryRow {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 18px;
-}
-
-.summaryCard {
-  flex: 1;
-  background: #111;
-  border: 1px solid #1e1e1e;
-  border-radius: 9px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.summaryNum {
-  font-size: 1.8rem;
-  font-weight: 700;
-  color: #f0f0f0;
-  line-height: 1;
-}
-
-.summaryAlert { color: #f0a500; }
-
-.summaryLabel {
-  font-size: 0.7rem;
-  color: #444;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* ── Progress ────────────────────────────────────────────────────────────── */
-.progressWrap {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 24px;
-}
-
-.progressBar {
-  flex: 1;
-  height: 5px;
-  background: #1e1e1e;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progressFill {
-  height: 100%;
-  background: #0070f3;
-  border-radius: 3px;
-  transition: width 0.4s ease;
-}
-
-.progressPct {
-  font-size: 0.75rem;
-  color: #444;
-  white-space: nowrap;
-}
-
-/* ── Task list ───────────────────────────────────────────────────────────── */
-.taskList {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.taskCard {
-  background: #111;
-  border: 1px solid #1e1e1e;
-  border-radius: 10px;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
-}
-
-.taskCard:hover { border-color: #2a2a2a; }
-
-.taskCardTop {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.statusBadge {
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 2px 8px;
-  border-radius: 999px;
-}
-
-.statusTodo           { background: #1e1e1e; color: #555; }
-.statusInProgress     { background: #001a40; color: #4a9eff; }
-.statusUnderReview    { background: #2a1800; color: #f0a500; }
-.statusNeedsRevision  { background: #2a0000; color: #e05252; }
-.statusComplete       { background: #002a10; color: #2ecc71; }
-
-.overdueBadge {
-  font-size: 0.65rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #3a1500;
-  color: #f0a500;
-}
-
-.taskTitle {
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: #ddd;
-  line-height: 1.3;
-}
-
-.taskDesc {
-  font-size: 0.8rem;
-  color: #555;
-  line-height: 1.4;
-}
-
-.taskMeta {
-  display: flex;
-  gap: 14px;
-  align-items: center;
-}
-
-.taskDue { font-size: 0.75rem; color: #555; }
-.taskDueOverdue { color: #e05252; }
-.taskSubs { font-size: 0.72rem; color: #444; }
-
-.submitTaskLink {
-  align-self: flex-start;
-  font-size: 0.8rem;
-  color: #0070f3;
-  text-decoration: none;
-  margin-top: 2px;
-}
-
-.submitTaskLink:hover { text-decoration: underline; }
-
-.markInProgressBtn {
-  align-self: flex-start;
-  background: none;
-  border: 1px solid #2a2a2a;
-  border-radius: 6px;
-  color: #666;
-  font-size: 0.75rem;
-  padding: 5px 12px;
-  cursor: pointer;
-  margin-top: 2px;
-  transition: border-color 0.15s, color 0.15s;
-}
-
-.markInProgressBtn:hover {
-  border-color: #555;
-  color: #ccc;
-}
-
-.viewFileLink {
-  display: inline-block;
-  margin-top: 10px;
-  font-size: 0.78rem;
-  color: #0070f3;
-  text-decoration: none;
-  opacity: 0.85;
-}
-
-.viewFileLink:hover {
-  text-decoration: underline;
-  opacity: 1;
-}
-
-/* ── Task card expanded state ─────────────────────────────────────────────── */
-.taskCardExpanded {
-  border-color: #2a2a2a;
-}
-
-.orphanLabel {
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #444;
-  background: #1a1a1a;
-  padding: 2px 6px;
-  border-radius: 4px;
-}
-
-.expandBtn {
-  margin-left: auto;
-  background: none;
-  border: none;
-  color: #0070f3;
-  font-size: 0.75rem;
-  cursor: pointer;
-  padding: 0;
-  white-space: nowrap;
-}
-
-.expandBtn:hover { text-decoration: underline; }
-
-/* ── Feedback panel (inside expanded task card) ───────────────────────────── */
-.feedbackPanel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.feedbackPanelDivider {
-  height: 1px;
-  background: #1e1e1e;
-  margin: 2px 0;
-}
-
-.feedbackSubDivider {
-  height: 1px;
-  background: #222;
-  margin: 18px 0;
-}
-
-.feedbackPanelHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.feedbackPanelGradeWrap {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.feedbackPanelGrade {
-  font-size: 2rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.grade5 { color: #4ade80; }
-.grade4 { color: #60a5fa; }
-.grade3 { color: #facc15; }
-.grade2 { color: #fb923c; }
-.grade1 { color: #f87171; }
-
-.feedbackPanelSubName {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: #f0f0f0;
-  margin-bottom: 2px;
-}
-
-.feedbackPanelVerdict {
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: #aaa;
-}
-
-.feedbackPanelDate {
-  font-size: 0.72rem;
-  color: #444;
-  margin-top: 2px;
-}
-
-.feedbackPanelSummary {
-  font-size: 0.85rem;
-  color: #aaa;
-  line-height: 1.55;
-  margin: 0;
-}
-
-.feedbackPanelSection {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-.feedbackPanelSectionTitle {
-  font-size: 0.65rem;
-  color: #444;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  font-weight: 600;
-  margin-bottom: 2px;
-}
-
-/* Flags */
-.flagRow {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  font-size: 0.82rem;
-  line-height: 1.4;
-  padding: 5px 8px;
-  border-radius: 5px;
-}
-
-.flag_high   { background: #1a0505; color: #e07070; }
-.flag_medium { background: #1a1200; color: #d4a040; }
-.flag_low    { background: #0f0f0f; color: #777; }
-
-.flagSev {
-  font-size: 0.62rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 1px 5px;
-  border-radius: 3px;
-  white-space: nowrap;
-  margin-top: 1px;
-  flex-shrink: 0;
-}
-
-.flag_high   .flagSev { background: #3a0a0a; color: #e05252; }
-.flag_medium .flagSev { background: #2a1a00; color: #f0a500; }
-.flag_low    .flagSev { background: #1e1e1e; color: #555; }
-
-.flagText { flex: 1; }
-
-/* Strengths */
-.strengthRow {
-  font-size: 0.82rem;
-  color: #4edc8a;
-  line-height: 1.4;
-  padding: 2px 0;
-}
-
-/* Action items */
-.actionRow {
-  font-size: 0.82rem;
-  color: #aaa;
-  line-height: 1.4;
-  padding: 2px 0;
-}
-
-/* ── Weekly pane ─────────────────────────────────────────────────────────── */
-.weeklyPane {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-.weeklyHeader {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid #1a1a1a;
-  margin-bottom: 4px;
-}
-
-.weeklyDateLabel {
-  font-size: 0.68rem;
-  color: #444;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  font-weight: 600;
-}
-
-.weeklyStats {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-}
-
-.weeklyStat {
-  background: #111;
-  border: 1px solid #1e1e1e;
-  border-radius: 10px;
-  padding: 14px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.weeklyStatAlert {
-  background: #150a0a;
-  border-color: #2a1010;
-}
-
-.weeklyStatNum {
-  font-size: 1.6rem;
-  font-weight: 700;
-  color: #e0e0e0;
-  line-height: 1;
-}
-
-.weeklyStatAlert .weeklyStatNum {
-  color: #e05252;
-}
-
-.weeklyStatLabel {
-  font-size: 0.68rem;
-  color: #555;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-weight: 500;
-}
-
-.weeklySection {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.weeklySectionHeader {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 2px;
-}
-
-.weeklySectionTitle {
-  font-size: 0.72rem;
-  color: #555;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-  font-weight: 600;
-}
-
-.weeklyBadge {
-  font-size: 0.65rem;
-  background: #1e1e1e;
-  color: #666;
-  padding: 1px 7px;
-  border-radius: 999px;
-}
-
-.weeklyBadgeRed {
-  font-size: 0.65rem;
-  background: #2a0000;
-  color: #e05252;
-  padding: 1px 7px;
-  border-radius: 999px;
-}
-
-/* Revision card */
-.revisionCard {
-  background: #150a0a;
-  border: 1px solid #2a1010;
-  border-radius: 10px;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.revisionTitle {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #ddd;
-}
-
-.revisionSummary {
-  font-size: 0.82rem;
-  color: #888;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.revisionItems {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.revisionItemsLabel {
-  font-size: 0.68rem;
-  color: #555;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-.revisionItem {
-  font-size: 0.82rem;
-  color: #aaa;
-  padding-left: 4px;
-}
-
-.managerNote {
-  font-size: 0.8rem;
-  color: #888;
-  background: #111;
-  border-left: 2px solid #2a2a2a;
-  padding: 6px 10px;
-  border-radius: 0 4px 4px 0;
-  font-style: italic;
-}
-
-.managerNoteLabel {
-  font-style: normal;
-  font-weight: 600;
-  color: #666;
-}
-
-/* Due soon card */
-.dueCard {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #111;
-  border: 1px solid #1e1e1e;
-  border-radius: 8px;
-  padding: 12px 14px;
-  gap: 10px;
-}
-
-.dueCardLeft {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  flex: 1;
-  min-width: 0;
-}
-
-.dueTitle {
-  font-size: 0.88rem;
-  color: #ddd;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dueDate {
-  font-size: 0.78rem;
-  color: #f0a500;
-  font-weight: 500;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
-/* Feedback card */
-.feedbackCard {
-  background: #111;
-  border: 1px solid #1e1e1e;
-  border-radius: 10px;
-  padding: 16px 18px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.feedbackTop {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.feedbackTask {
-  font-size: 0.9rem;
-  font-weight: 500;
-  color: #ddd;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.feedbackGrade {
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.grade5 { color: #4ade80; }
-.grade4 { color: #60a5fa; }
-.grade3 { color: #facc15; }
-.grade2 { color: #fb923c; }
-.grade1 { color: #f87171; }
-
-.feedbackSummary {
-  font-size: 0.82rem;
-  color: #888;
-  line-height: 1.5;
-  margin: 0;
-}
-
-.feedbackStrengths {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.strengthItem {
-  font-size: 0.8rem;
-  color: #2ecc71;
-}
-
-/* Submission row */
-.subRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: #111;
-  border: 1px solid #1e1e1e;
-  border-radius: 8px;
-  padding: 10px 14px;
-}
-
-.subTask {
-  font-size: 0.85rem;
-  color: #ccc;
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.subDate {
-  font-size: 0.75rem;
-  color: #444;
-  white-space: nowrap;
-}
-
-/* Shared pill styles */
-.pill {
-  font-size: 0.62rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  padding: 2px 7px;
-  border-radius: 999px;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.pillPending  { background: #2a2000; color: #f0a500; }
-.pillApproved { background: #002a10; color: #2ecc71; }
-.pillRejected { background: #2a0000; color: #e05252; }
-
-.recurringBadge {
-  display: inline-block;
-  font-size: 0.68rem;
-  font-weight: 600;
-  padding: 1px 6px;
-  border-radius: 4px;
-  background: #14532d;
-  color: #4ade80;
-  margin-right: 6px;
-  vertical-align: middle;
+"use client";
+
+import { useState, useRef, useCallback, useEffect } from "react";
+import { upload } from "@vercel/blob/client";
+import styles from "./ReviewPortal.module.css";
+import type { Task, TaskType } from "@/lib/types";
+
+const INTERNS = ["Natalie", "Sam"];
+
+export default function ReviewPortal() {
+  const [file, setFile] = useState<File | null>(null);
+  const [intern, setIntern] = useState(INTERNS[0]);
+  const [internEmail, setInternEmail] = useState("");
+  const [taskId, setTaskId] = useState<string>("");
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskType, setTaskType] = useState<TaskType>("operational");
+  const [availableTasks, setAvailableTasks] = useState<Task[]>([]);
+  const [submissionName, setSubmissionName] = useState("");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState("");
+  const [error, setError] = useState("");
+  const [over, setOver] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  // Load tasks for the selected intern
+  useEffect(() => {
+    fetch("/api/tasks")
+      .then(r => r.json())
+      .then(data => {
+        const tasks: Task[] = data.tasks ?? [];
+        setAvailableTasks(tasks);
+        // Auto-select first task for this intern
+        const myTasks = tasks.filter(t =>
+          t.isRecurring
+            ? (t.recurringAssignees?.includes(intern) ?? false)
+            : t.assignedTo === intern
+        );
+        if (myTasks.length > 0) {
+          setTaskId(myTasks[0].id);
+          setTaskTitle(myTasks[0].title);
+          setTaskType(myTasks[0].taskType ?? "operational");
+        } else {
+          setTaskId("");
+          setTaskTitle("Other / unlisted");
+          setTaskType("operational");
+        }
+      })
+      .catch(() => {});
+  }, [intern]);
+
+  const internTasks = availableTasks.filter(t =>
+    t.isRecurring
+      ? (t.recurringAssignees?.includes(intern) ?? false)
+      : t.assignedTo === intern
+  );
+
+  const handleTaskChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = e.target.value;
+    if (val === "__other__") {
+      setTaskId("");
+      setTaskTitle("Other / unlisted");
+      setTaskType("operational");
+    } else {
+      const found = availableTasks.find(t => t.id === val);
+      setTaskId(val);
+      setTaskTitle(found?.title ?? "");
+      setTaskType(found?.taskType ?? "operational");
+    }
+  };
+
+  const handleFile = (f: File) => {
+    setFile(f);
+    setSubmitted(false);
+    setError("");
+  };
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setOver(false);
+    const f = e.dataTransfer.files[0];
+    if (f) handleFile(f);
+  }, []);
+
+  const handleSubmit = async () => {
+    if (!file) return;
+    if (!internEmail.trim()) {
+      setError("Please enter your email address.");
+      return;
+    }
+    setLoading(true);
+    setError("");
+    setSubmitted(false);
+
+    try {
+      // Step 1: upload file directly to Blob (bypasses serverless 4.5MB limit)
+      setStatusMsg("Uploading file…");
+      const blob = await upload(file.name, file, {
+        access: "public",
+        handleUploadUrl: "/api/upload",
+      });
+
+      // Step 2: send blob URL + metadata to the review API
+      setStatusMsg("AI is reviewing your work…");
+      const formData = new FormData();
+      formData.append("fileUrl", blob.url);
+      formData.append("fileName", file.name);
+      formData.append("intern", intern);
+      formData.append("internEmail", internEmail.trim());
+      formData.append("task", taskTitle || "Other / unlisted");
+      if (taskId) formData.append("taskId", taskId);
+      formData.append("taskType", taskType);
+      if (submissionName.trim()) formData.append("submissionName", submissionName.trim());
+      formData.append("notes", notes);
+
+      const res = await fetch("/api/review", { method: "POST", body: formData });
+      const data = await res.json();
+
+      if (!res.ok || data.error) throw new Error(data.error || "Server error");
+
+      setSubmittedEmail(internEmail.trim());
+      setSubmitted(true);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+      setStatusMsg("");
+    }
+  };
+
+  const reset = () => {
+    setFile(null);
+    setSubmitted(false);
+    setError("");
+    setNotes("");
+    setSubmissionName("");
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  // ── Submitted confirmation ────────────────────────────────────────────────
+  if (submitted) {
+    return (
+      <div className={styles.shell}>
+        <div className={styles.masthead}>
+          <h1 className={styles.mastheadTitle}>Deliverable Review</h1>
+          <span className={styles.mastheadMeta}>Strategic Finance · Summer 2026</span>
+        </div>
+        <div className={styles.confirmBox}>
+          <div className={styles.confirmIcon}>✓</div>
+          <h2 className={styles.confirmTitle}>Submitted successfully</h2>
+          <p className={styles.confirmMsg}>
+            Your work has been received and is being reviewed. You&apos;ll be notified
+            at <strong>{submittedEmail}</strong> once the review is ready.
+          </p>
+          <button className={styles.btnOutline} onClick={reset}>
+            Submit another
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Main form ─────────────────────────────────────────────────────────────
+  return (
+    <div className={styles.shell}>
+      {/* Masthead */}
+      <div className={styles.masthead}>
+        <h1 className={styles.mastheadTitle}>Deliverable Review</h1>
+        <span className={styles.mastheadMeta}>Strategic Finance · Summer 2026</span>
+      </div>
+
+      {/* Upload zone */}
+      <div
+        className={`${styles.dropZone} ${over ? styles.over : ""}`}
+        onDragOver={(e) => { e.preventDefault(); setOver(true); }}
+        onDragLeave={() => setOver(false)}
+        onDrop={handleDrop}
+        onClick={() => fileRef.current?.click()}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && fileRef.current?.click()}
+        aria-label="Upload deliverable file"
+      >
+        <input
+          ref={fileRef}
+          type="file"
+          accept=".pdf,.xlsx,.xls,.docx,.doc,.pptx,.csv,.txt"
+          className={styles.fileInput}
+          onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+          onClick={(e) => e.stopPropagation()}
+        />
+        <svg className={styles.dropIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden="true">
+          <path d="M12 16V8m0 0-3 3m3-3 3 3M6 20h12a2 2 0 002-2V8.828a2 2 0 00-.586-1.414l-3.828-3.828A2 2 0 0014.172 3H6a2 2 0 00-2 2v13a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+        <p className={styles.dropLabel}>Drop deliverable here</p>
+        <p className={styles.dropSub}>PDF, Excel, Word, CSV — up to 25 MB</p>
+      </div>
+
+      {file && (
+        <div className={styles.filePill}>
+          <span>{file.name}</span>
+          <span className={styles.fileSize}>({(file.size / 1024).toFixed(0)} KB)</span>
+          <button className={styles.removeBtn} onClick={reset} aria-label="Remove file">×</button>
+        </div>
+      )}
+
+      {/* Context fields */}
+      <div className={styles.contextGrid}>
+        <div className={styles.fieldGroup}>
+          <label htmlFor="intern-select">Your name</label>
+          <select id="intern-select" value={intern} onChange={(e) => setIntern(e.target.value)}>
+            {INTERNS.map((n) => <option key={n}>{n}</option>)}
+          </select>
+        </div>
+        <div className={styles.fieldGroup}>
+          <label htmlFor="email-input">Your email</label>
+          <input
+            id="email-input"
+            type="email"
+            placeholder="you@example.com"
+            value={internEmail}
+            onChange={(e) => setInternEmail(e.target.value)}
+          />
+        </div>
+        <div className={styles.fieldGroup}>
+          <label htmlFor="task-select">Task / deliverable</label>
+          <select
+            id="task-select"
+            value={taskId || "__other__"}
+            onChange={handleTaskChange}
+          >
+            {internTasks.map((t) => (
+              <option key={t.id} value={t.id}>{t.title}</option>
+            ))}
+            <option value="__other__">Other / unlisted</option>
+          </select>
+        </div>
+        {!taskId && (
+          <div className={styles.fieldGroup}>
+            <label htmlFor="task-type-select">Task type</label>
+            <select
+              id="task-type-select"
+              value={taskType}
+              onChange={(e) => setTaskType(e.target.value as TaskType)}
+            >
+              <option value="operational">Operational</option>
+              <option value="project">Project / Analysis</option>
+            </select>
+          </div>
+        )}
+        <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+          <label htmlFor="submission-name-input">Submission name <span className={styles.optionalLabel}>(optional)</span></label>
+          <input
+            id="submission-name-input"
+            type="text"
+            placeholder="e.g. Q2 Variance Analysis – Draft 2"
+            value={submissionName}
+            onChange={(e) => setSubmissionName(e.target.value)}
+          />
+        </div>
+        <div className={`${styles.fieldGroup} ${styles.fullWidth}`}>
+          <label htmlFor="notes-input">Notes for the reviewer (optional)</label>
+          <textarea
+            id="notes-input"
+            placeholder="e.g. First attempt — please focus on formula accuracy and executive summary quality."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Submit */}
+      <div className={styles.submitRow}>
+        <button
+          className={styles.btnReview}
+          onClick={handleSubmit}
+          disabled={!file || loading}
+        >
+          {loading ? <span className={styles.spinner} aria-hidden="true" /> : (
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+              <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          )}
+          {loading ? "Submitting…" : "Submit for review"}
+        </button>
+        {statusMsg && <span className={styles.statusLine} aria-live="polite">{statusMsg}</span>}
+      </div>
+
+      {error && <div className={styles.errorBox} role="alert">⚠ {error}</div>}
+    </div>
+  );
 }
