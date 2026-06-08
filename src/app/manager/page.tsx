@@ -39,7 +39,7 @@ function statusColor(s: TaskStatus) {
   }[s];
 }
 
-type Tab = "overview" | "tasks" | "submissions" | "weekly";
+type Tab = "overview" | "tasks" | "submissions" | "weekly" | "workload";
 
 export default function ManagerPage() {
   const [password, setPassword] = useState("");
@@ -70,8 +70,8 @@ export default function ManagerPage() {
   const [recurringSaving, setRecurringSaving] = useState(false);
 
   // ── New task form state ────────────────────────────────────────────────────
-  const [newTask, setNewTask] = useState<{ title: string; assignedTo: string; dueDate: string; description: string; taskType: TaskType }>({
-    title: "", assignedTo: INTERNS[0], dueDate: "", description: "", taskType: "operational",
+  const [newTask, setNewTask] = useState<{ title: string; assignedTo: string; dueDate: string; description: string; taskType: TaskType; workload: number }>({
+    title: "", assignedTo: INTERNS[0], dueDate: "", description: "", taskType: "operational", workload: 3,
   });
   const [taskSaving, setTaskSaving] = useState(false);
   const [showNewTask, setShowNewTask] = useState(false);
@@ -219,7 +219,7 @@ export default function ManagerPage() {
       if (res.ok) {
         const data = await res.json();
         setTasks((prev) => [data.task, ...prev]);
-        setNewTask({ title: "", assignedTo: INTERNS[0], dueDate: "", description: "", taskType: "operational" });
+        setNewTask({ title: "", assignedTo: INTERNS[0], dueDate: "", description: "", taskType: "operational", workload: 3 });
         setShowNewTask(false);
       }
     } finally {
@@ -343,16 +343,17 @@ export default function ManagerPage() {
 
       {/* Tab bar */}
       <nav className={styles.tabBar}>
-        {(["overview", "tasks", "submissions", "weekly"] as Tab[]).map((t) => (
+        {(["overview", "tasks", "submissions", "weekly", "workload"] as Tab[]).map((t) => (
           <button
             key={t}
             className={`${styles.tabBtn} ${tab === t ? styles.tabActive : ""}`}
             onClick={() => { setTab(t); setSelected(null); }}
           >
             {t === "overview" && "Overview"}
-            {t === "tasks" && `Tasks${tasks.length ? ` (${tasks.length})` : ""}`}
+            {t === "tasks" && `Tasks${activeTasks.length ? ` (${activeTasks.length})` : ""}`}
             {t === "submissions" && `Submissions${pending.length ? ` · ${pending.length} pending` : ""}`}
             {t === "weekly" && "Weekly"}
+            {t === "workload" && "Workload"}
           </button>
         ))}
       </nav>
@@ -481,6 +482,18 @@ export default function ManagerPage() {
                     <option value="operational">Operational</option>
                     <option value="project">Project / Analysis</option>
                   </select>
+                  <select
+                    className={styles.fieldSelect}
+                    value={newTask.workload}
+                    onChange={e => setNewTask(v => ({ ...v, workload: Number(e.target.value) }))}
+                    style={{ maxWidth: 180 }}
+                  >
+                    <option value={1}>1 — Light</option>
+                    <option value={2}>2 — Low</option>
+                    <option value={3}>3 — Moderate</option>
+                    <option value={4}>4 — Heavy</option>
+                    <option value={5}>5 — Intensive</option>
+                  </select>
                 </div>
                 <textarea
                   className={styles.fieldTextarea}
@@ -521,6 +534,11 @@ export default function ManagerPage() {
                           )}
                           <div className={styles.taskCardMeta}>
                             <span className={styles.taskCardIntern}>{task.assignedTo}</span>
+                            {task.workload && (
+                              <span className={`${styles.workloadBadge} ${styles[`wl${task.workload}`]}`}>
+                                W{task.workload}
+                              </span>
+                            )}
                             {task.dueDate && (
                               <span className={styles.taskCardDue}>
                                 Due {new Date(task.dueDate + "T00:00:00").toLocaleDateString()}
@@ -1061,6 +1079,88 @@ export default function ManagerPage() {
             })}
           </div>
         )}
+
+        {/* ── WORKLOAD ── */}
+        {tab === "workload" && (() => {
+          const WORKLOAD_LABELS: Record<number, string> = { 1: "Light", 2: "Low", 3: "Moderate", 4: "Heavy", 5: "Intensive" };
+          const activeScoredTasks = activeTasks.filter(t => t.status !== "complete");
+          const scoreFor = (intern: string) =>
+            activeScoredTasks.filter(t => t.assignedTo === intern).reduce((s, t) => s + (t.workload ?? 0), 0);
+          const countFor = (intern: string) => activeScoredTasks.filter(t => t.assignedTo === intern).length;
+          const scores = INTERNS.map(scoreFor);
+          const maxScore = Math.max(...scores, 1);
+          const totalScore = scores.reduce((a, b) => a + b, 0);
+
+          return (
+            <div className={styles.workloadPane}>
+              {/* Balance bar */}
+              <div className={styles.workloadBalance}>
+                <div className={styles.workloadBalanceHeader}>
+                  <span className={styles.sectionTitle} style={{ margin: 0 }}>Workload Balance</span>
+                  <span className={styles.workloadTotalScore}>{totalScore} pts total active load</span>
+                </div>
+                <div className={styles.workloadBalanceBars}>
+                  {INTERNS.map((intern, i) => (
+                    <div key={intern} className={styles.workloadBalanceRow}>
+                      <span className={styles.workloadBalanceName}>{intern}</span>
+                      <div className={styles.workloadBalanceTrack}>
+                        <div
+                          className={styles.workloadBalanceFill}
+                          style={{ width: `${(scores[i] / maxScore) * 100}%` }}
+                        />
+                      </div>
+                      <span className={styles.workloadBalanceScore}>{scores[i]} pts · {countFor(intern)} tasks</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Per-intern columns */}
+              <div className={styles.workloadColumns}>
+                {INTERNS.map(intern => {
+                  const internActive = activeScoredTasks
+                    .filter(t => t.assignedTo === intern)
+                    .sort((a, b) => (b.workload ?? 0) - (a.workload ?? 0));
+                  return (
+                    <div key={intern} className={styles.workloadColumn}>
+                      <div className={styles.workloadColHeader}>
+                        <span className={styles.workloadColName}>{intern}</span>
+                        <span className={styles.workloadColScore}>{scoreFor(intern)} pts</span>
+                      </div>
+                      {internActive.length === 0 ? (
+                        <p className={styles.emptyMsg} style={{ padding: "12px 0" }}>No active tasks.</p>
+                      ) : (
+                        internActive.map(task => (
+                          <div key={task.id} className={styles.workloadTaskRow}>
+                            <span className={`${styles.workloadLevelBadge} ${task.workload ? styles[`wl${task.workload}`] : styles.wlNone}`}>
+                              {task.workload ? `${task.workload} · ${WORKLOAD_LABELS[task.workload]}` : "—"}
+                            </span>
+                            <div className={styles.workloadTaskInfo}>
+                              <span className={styles.workloadTaskTitle}>{task.title}</span>
+                              <div className={styles.workloadTaskMeta}>
+                                <span className={`${styles.taskTypeBadge} ${task.taskType === "operational" ? styles.taskTypeOp : styles.taskTypeProject}`}>
+                                  {task.taskType === "operational" ? "Ops" : "Project"}
+                                </span>
+                                <span className={`${styles.pill} ${statusColor(task.status)}`} style={{ fontSize: "0.7rem", padding: "1px 7px" }}>
+                                  {TASK_STATUSES.find(s => s.value === task.status)?.label}
+                                </span>
+                                {task.dueDate && (
+                                  <span className={styles.taskCardDue}>
+                                    due {new Date(task.dueDate + "T00:00:00").toLocaleDateString()}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })()}
       </div>
     </div>
   );
