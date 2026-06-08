@@ -45,6 +45,7 @@ export interface Task {
   assignedTo: string;
   taskType: TaskType;
   status: TaskStatus;
+  workload?: number; // 1–5: effort/intensity level
   dueDate?: string;
   createdBy: string;
   createdAt: string;
